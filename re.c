@@ -47,7 +47,7 @@ typedef struct regex_t
   {
     unsigned char  ch;   /*      the character itself             */
     unsigned char* ccl;  /*  OR  a pointer to characters in class */
-  };  
+  };
 } regex_t;
 
 
@@ -57,13 +57,13 @@ static int matchpattern(regex_t* pattern, const char* text);
 static int matchcharclass(char c, const char* str);
 static int matchstar(regex_t p, regex_t* pattern, const char* text);
 static int matchplus(regex_t p, regex_t* pattern, const char* text);
-static int matchone(regex_t p, char c); 
-static int matchdigit(char c); 
-static int matchalpha(char c); 
-static int matchwhitespace(char c); 
+static int matchone(regex_t p, char c);
+static int matchdigit(char c);
+static int matchalpha(char c);
+static int matchwhitespace(char c);
 static int matchmetachar(char c, const char* str);
 static int matchrange(char c, const char* str);
-static int ismetachar(char c); 
+static int ismetachar(char c);
 
 
 
@@ -139,9 +139,9 @@ re_t re_compile(const char* pattern)
             case 'W': {    re_compiled[j].type = NOT_ALPHA;        } break;
             case 's': {    re_compiled[j].type = WHITESPACE;       } break;
             case 'S': {    re_compiled[j].type = NOT_WHITESPACE;   } break;
-                                                                                                                                                                                                                                                                                                                                  141,1         18%
-            /* Escaped character, e.g. '.' or '$' */
-            default:
+
+            /* Escaped character, e.g. '.' or '$' */ 
+            default:  
             {
               re_compiled[j].type = CHAR;
               re_compiled[j].ch = pattern[i];
@@ -169,7 +169,7 @@ re_t re_compile(const char* pattern)
         {
           re_compiled[j].type = INV_CHAR_CLASS;
           i += 1; /* Increment i to avoid including '^' in the char-buffer */
-        }
+        }  
         else
         {
           re_compiled[j].type = CHAR_CLASS;
@@ -213,7 +213,7 @@ void re_print(regex_t* pattern)
     {
       break;
     }
-                                                                                                                                                                                                                                                                                                                                  215,1         39%
+
     printf("type: %s", types[pattern[i].type]);
     if (pattern[i].type == CHAR_CLASS || pattern[i].type == INV_CHAR_CLASS)
     {
@@ -296,7 +296,7 @@ static int matchcharclass(char c, const char* str)
       if (matchmetachar(c, str))
       {
         return 1;
-      }
+      } 
       else if ((c == str[0]) && !ismetachar(c))
       {
         return 1;
@@ -424,4 +424,7 @@ static int matchpattern(regex_t* pattern, const char* text)
 }
 
 #endif
+
+
+
 

@@ -96,6 +96,7 @@ For more usage examples I encourage you to look at the code in the `tests`-folde
 
 ### TODO
 - Fix the implementation of inverted character classes - patches are welcome, wink wink :D
+- Fix implementation of branches (`|`), and see if that can give groups as well, e.g. `(a|b)+`.
 - Add `example.c` that demonstrates usage.
 - Add `tests/test_perf.c` for performance and time measurements.
 - Testing: add matching on purely random data, comparing with Python's `re`. Currently only matching known positives - need to verify rejection as well.

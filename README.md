@@ -61,7 +61,8 @@ NOTE: inverted character classes are buggy - see the test harness for concrete e
   -  `+`         Plus, match one or more (greedy)
   -  `?`         Question, match zero or one (non-greedy)
   -  `[abc]`     Character class, match if one of {'a', 'b', 'c'}
-  -  `[^abc]`   Inverted class, match if NOT one of {'a', 'b', 'c'} -- **`NOTE: This feature is currently broken!`**
+  -  `[^abc]`   Inverted class, match if NOT one of {'a', 'b', 'c'}
+  **`NOTE: This feature is currently broken for some usage of character ranges!`**
   -  `[a-zA-Z]` Character ranges, the character set of the ranges { a-z | A-Z }
   -  `\s`       Whitespace, \t \f \r \n \v and spaces
   -  `\S`       Non-whitespace

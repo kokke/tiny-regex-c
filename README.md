@@ -2,7 +2,9 @@
 # A small regex implementation in C
 ### Description
 Small and portable [Regular Expression](https://en.wikipedia.org/wiki/Regular_expression) (regex) library written in C. 
+
 Design is inspired by Rob Pike's regex-code for the book *"Beautiful Code"* [available online here](http://www.cs.princeton.edu/courses/archive/spr09/cos333/beautiful.html).
+
 Supports a subset of the syntax and semantics of the Python standard library implementation (the `re`-module).
 
 ### Design goals
@@ -68,8 +70,11 @@ NOTE: inverted character classes are buggy - see the test harness for concrete e
 
 ### Usage
 Compile a regex from ASCII-string (char-array) to a custom pattern structure using `re_compile()`.
+
 Search a text-string for a regex and get an index into the string, using `re_match()` or `re_matchp()`.
+
 The returned index points to the first place in the string, where the regex pattern matches.
+
 If the regular expression doesn't match, the matching function returns an index of -1 to indicate failure.
 
 ### Examples
@@ -94,6 +99,7 @@ For more usage examples I encourage you to look at the code in the `tests`-folde
 
 ### FAQ
 - *Q: What differentiates this library from other C regex implementations?*
+
   A: Well, the small size for one. <500 lines of C-code compiling to 2-3kb ROM, using very little RAM.
 
 ### License

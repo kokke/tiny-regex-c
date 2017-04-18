@@ -15,7 +15,7 @@ The main design goal of this library is to be small, correct, self contained and
 - Iterative searching preferred over recursive by default (can be set with a pre-processor flag).
 - No support for capturing groups or named capture: `(^P<name>group)` etc.
 - Small code and binary size: <500 SLOC, ~3kb binary for x86.
-- Thorough correctness testing against the Python implementation in the `re`-module.
+- Thorough correctness testing against the Python implementation in the `re`-module. Try `make test` to run a few thousand test cases yourself.
 - Compiled for x86 using GCC 4.7.4 and optimizing for size, the binary takes up ~3kb code space and allocates ~0.5kb RAM :
   ```
   > gcc -Os -c re.c

@@ -50,7 +50,9 @@ int  re_match(const char* pattern, const char* text);
 
 ### Supported meta-characters
 The following features / meta-characters are supported by this library.
+
 NOTE: inverted character classes are buggy - see the test harness for concrete examples.
+
 
   -  `.`         Dot, matches any character
   -  `^`         Start anchor, matches beginning of string

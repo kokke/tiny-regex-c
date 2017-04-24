@@ -7,16 +7,22 @@ Design is inspired by Rob Pike's regex-code for the book *"Beautiful Code"* [ava
 
 Supports a subset of the syntax and semantics of the Python standard library implementation (the `re`-module).
 
+### Current status
+A lot of the supported meta-chararacters seem to work properly according to the test-set. 
+There is a problem with ranges (e.g. `[0-9]` for a digit 0-9) combined with inverted character-cases, e.g. `[^ab]` for anything but 'a' or 'b' - like `[^-0-9]` for anything not '-' or a digit 0-9. I think the code mathces too broadly in that case. 
+
+A piece of advice: test the patterns you are going to use. You can easily modify the test-harness to generate tests for your intended patterns to check for compliance.
+
 ### Design goals
 The main design goal of this library is to be small, correct, self contained and use few resources while retaining acceptable performance and feature completeness. Clarity of the code is also highly valued.
 
 ### Notable features and omission
-- Small code and binary size: <500 SLOC, ~3kb binary for x86. Adjustable memory usage (#define'd in header)
+- Small code and binary size: <500 SLOC, ~3kb binary for x86. Statically #define'd memory usage / allocation.
 - No use of dynamic memory allocation (i.e. no calls to `malloc` / `free`).
-- Iterative searching preferred over recursive by default (can be set with a pre-processor flag).
+- To avoid call-stack exhaustion, iterative searching is preferred over recursive by default (can be changed with a pre-processor flag).
 - No support for capturing groups or named capture: `(^P<name>group)` etc.
 - Thorough testing : [exrex](https://github.com/asciimoo/exrex) is used to randomly generate test-cases from regex patterns, which are fed into the regex code for verification. Try `make test` to generate a few thousand tests cases yourself.
-- Compiled for x86 using GCC 4.7.4 and optimizing for size, the binary takes up ~3kb code space and allocates ~0.5kb RAM :
+- Compiled for x86 using GCC 4.7.4 and optimizing for size, the binary takes up ~2-3kb code space and allocates ~0.5kb RAM :
   ```
   > gcc -Os -c re.c
   > size re.o

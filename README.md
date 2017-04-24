@@ -83,8 +83,13 @@ If the regular expression doesn't match, the matching function returns an index 
 ### Examples
 Example of usage:
 ```C
+/* Standard null-terminated C-string to search: */
 const char* string_to_search = "ahem.. 'hello world !' ..";
+
+/* Compile a simple regular expression using character classes, meta-char and greedy + non-greedy quantifiers: */
 re_t pattern = re_compile("[Hh]ello [Ww]orld\\s*[!]?");
+
+/* Check if the regex matches the text: */
 int match_idx = re_matchp(pattern, string_to_search);
 if (match_idx != -1)
 {

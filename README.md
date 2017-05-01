@@ -19,7 +19,7 @@ I think you should test the patterns you are going to use. You can easily modify
 ### Design goals
 The main design goal of this library is to be small, correct, self contained and use few resources while retaining acceptable performance and feature completeness. Clarity of the code is also highly valued.
 
-### Notable features and omission
+### Notable features and omissions
 - Small code and binary size: <500 SLOC, ~3kb binary for x86. Statically #define'd memory usage / allocation.
 - No use of dynamic memory allocation (i.e. no calls to `malloc` / `free`).
 - To avoid call-stack exhaustion, iterative searching is preferred over recursive by default (can be changed with a pre-processor flag).

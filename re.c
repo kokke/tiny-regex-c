@@ -34,8 +34,8 @@
 
 /* Definitions: */
 
-#define MAX_REGEXP_OBJECTS      30    /* Max number of regex objects in array. */
-#define MAX_CHAR_CLASS_LEN      40    /* Max length of character-class buffer. */
+#define MAX_REGEXP_OBJECTS      30    /* Max number of regex symbols in expression. */
+#define MAX_CHAR_CLASS_LEN      40    /* Max length of character-class buffer in.   */
 
 
 enum { UNUSED, DOT, BEGIN, END, QUESTIONMARK, STAR, PLUS, CHAR, CHAR_CLASS, INV_CHAR_CLASS, DIGIT, NOT_DIGIT, ALPHA, NOT_ALPHA, WHITESPACE, NOT_WHITESPACE, BRANCH };
@@ -99,6 +99,9 @@ int re_matchp(re_t pattern, const char* text)
 
 re_t re_compile(const char* pattern)
 {
+  /* The sizes of the two static arrays below substantiates the static RAM usage of this module.
+     MAX_REGEXP_OBJECTS is the max number of symbols in the expression.
+     MAX_CHAR_CLASS_LEN determines the size of buffer for chars in all char-classes in the expression. */
   static regex_t re_compiled[MAX_REGEXP_OBJECTS];
   static unsigned char ccl_buf[MAX_CHAR_CLASS_LEN];
   int ccl_bufidx = 1;

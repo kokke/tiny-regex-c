@@ -1,11 +1,19 @@
 #!/usr/bin/env python
 
+"""
+  This program generates random text that matches a given regex-pattern.
+  The pattern is given via sys.argv and the generated text is passed to
+  the binary 'tests/test_rand' to check if the generated text also matches
+  the regex-pattern in the C implementation.
+  The exit-code of the testing program, is used to determine test success.
+  
+  This script is called by the Makefile when doing 'make test'
+"""
+
+
 import re
 import sys
 import exrex
-import random
-import string
-import json
 from subprocess import call
 
 

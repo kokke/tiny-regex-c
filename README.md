@@ -8,11 +8,13 @@ Design is inspired by Rob Pike's regex-code for the book *"Beautiful Code"* [ava
 Supports a subset of the syntax and semantics of the Python standard library implementation (the `re`-module).
 
 ### Current status
-A lot of the supported meta-chararacters seem to work properly according to the test-set. 
+All supported meta-chararacters seem to work properly according to the test-set, with the following exception:
 
 There is a problem with ranges (e.g. `[0-9]` for a digit 0-9) combined with inverted character-cases, e.g. `[^ab]` for anything but 'a' or 'b' - like `[^-0-9]` for anything not '-' or a digit 0-9. I think the code mathces too broadly in that case. 
 
-A piece of advice: test the patterns you are going to use. You can easily modify the test-harness to generate tests for your intended patterns to check for compliance.
+I think you should test the patterns you are going to use. You can easily modify the test-harness to generate tests for your intended patterns to check for compliance.
+
+**I will gladly accept patches correcting bugs.**
 
 ### Design goals
 The main design goal of this library is to be small, correct, self contained and use few resources while retaining acceptable performance and feature completeness. Clarity of the code is also highly valued.
@@ -107,7 +109,7 @@ if (match_idx != -1)
 For more usage examples I encourage you to look at the code in the `tests`-folder.
 
 ### TODO
-- Fix the implementation of inverted character classes - patches are welcome, wink wink :D
+- Fix the implementation of inverted character classes.
 - Fix implementation of branches (`|`), and see if that can lead us closer to groups as well, e.g. `(a|b)+`.
 - Add `example.c` that demonstrates usage.
 - Add `tests/test_perf.c` for performance and time measurements.

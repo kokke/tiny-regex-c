@@ -1,3 +1,6 @@
+/*
+    This program prints out a verbose explanation of a given regular expression.
+*/
 
 #include <stdio.h>
 #include "re.h"

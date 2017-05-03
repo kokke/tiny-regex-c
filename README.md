@@ -8,7 +8,7 @@ Design is inspired by Rob Pike's regex-code for the book *"Beautiful Code"* [ava
 Supports a subset of the syntax and semantics of the Python standard library implementation (the `re`-module).
 
 ### Current status
-All supported meta-chararacters seem to work properly according to the test-set, with the following exception:
+All supported regex-operators seem to work properly according to the test-set, with the following exception:
 
 There is a problem with ranges (e.g. `[0-9]` for a digit 0-9) combined with inverted character-cases, e.g. `[^ab]` for anything but 'a' or 'b' - like `[^-0-9]` for anything not '-' or a digit 0-9. I think the code mathces too broadly in that case. 
 
@@ -57,8 +57,8 @@ int  re_matchp(re_t pattern, const char* text);
 int  re_match(const char* pattern, const char* text);
 ```
 
-### Supported meta-characters
-The following features / meta-characters are supported by this library.
+### Supported regex-operators
+The following features / regex-operators are supported by this library.
 
 NOTE: inverted character classes are buggy - see the test harness for concrete examples.
 

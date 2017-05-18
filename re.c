@@ -31,6 +31,7 @@
 
 #include "re.h"
 #include <stdio.h>
+#include <assert.h>
 
 /* Definitions: */
 
@@ -181,6 +182,8 @@ re_t re_compile(const char* pattern)
         /* Copy characters inside [..] to buffer */
         while (pattern[++i] != ']')
         {
+          /* Missing ] */
+          assert(pattern[i] != '\0');
           ccl_buf[ccl_bufidx++] = pattern[i];
         }
         /* Null-terminate string end */

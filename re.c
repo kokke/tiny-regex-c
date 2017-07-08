@@ -179,7 +179,8 @@ re_t re_compile(const char* pattern)
         }
 
         /* Copy characters inside [..] to buffer */
-        while (pattern[++i] != ']')
+        while (    (pattern[++i] != ']')
+                && (pattern[i]   != '\0')) /* Missing ] */
         {
           ccl_buf[ccl_bufidx++] = pattern[i];
         }

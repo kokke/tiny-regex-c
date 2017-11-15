@@ -2,8 +2,10 @@
  * Testing various regex-patterns
  */
 
+
 #include <stdio.h>
 #include <string.h>
+#define RE_BUILDWITH_DEBUG
 #include "re.h"
 
 
@@ -71,7 +73,7 @@ char* test_vector[][3] =
 };
 
 
-void re_print(re_t);
+//void re_print(re_t, unsigne);
 
 int main()
 {
@@ -95,7 +97,8 @@ int main()
             if (m != (-1))
             {
                 printf("\n");
-                re_print(re_compile(pattern));
+                unsigned int ln = 0;
+                re_print(re_compile(pattern, &ln), ln);
                 fprintf(stderr, "[%lu/%lu]: pattern '%s' matched '%s' unexpectedly. \n", (i+1), ntests, pattern, text);
                 nfailed += 1;
             }
@@ -105,7 +108,8 @@ int main()
             if (m == (-1))
             {
                 printf("\n");
-                re_print(re_compile(pattern));
+                unsigned int ln = 0;
+                re_print(re_compile(pattern, &ln), ln);
                 fprintf(stderr, "[%lu/%lu]: pattern '%s' didn't match '%s' as expected. \n", (i+1), ntests, pattern, text);
                 nfailed += 1;
             }

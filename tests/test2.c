@@ -3,6 +3,7 @@
  *
  */
 
+
 #include <stdio.h>
 #include <string.h>
 #include "re.h"
@@ -2084,6 +2085,7 @@ int main()
 
     printf("  matching on %lu bytes of test input: ", bufsizes[i]);
     fflush(stdout);
+
     printf("%d \n", re_match(".+nonexisting.+", buf)); 
 
     buf[bufsizes[i]] = old;

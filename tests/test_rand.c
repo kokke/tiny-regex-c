@@ -7,6 +7,8 @@
     See ./scripts/regex_test.py and the Makefile for this project for the gritty details.
 */
 
+
+
 #include <stdio.h>
 #include "re.h"
 
@@ -15,7 +17,9 @@ int main(int argc, char** argv)
 {
   if (argc == 3)
   {
+    
     int m = re_match(argv[1], argv[2]);
+    
     if (m != -1) 
       return 0;
   }

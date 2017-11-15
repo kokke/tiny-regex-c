@@ -79,18 +79,18 @@ static int ismetachar(char c);
 int re_match(const char* pattern, const char* text)
 {
     int ret = -1;
-	re_t reg = re_compile(pattern, NULL);
-	if (reg == NULL)
-	{
-		LOGERR("failed at %s:%u\r\n", __FUNCTION__, __LINE__);
-	}
-	else
-	{
-		ret = re_matchp(reg, text);
-		free((void*) reg);
-	}
-	
-	return ret;
+    re_t reg = re_compile(pattern, NULL);
+    if (reg == NULL)
+    {
+        LOGERR("failed at %s:%u\r\n", __FUNCTION__, __LINE__);
+    }
+    else
+    {
+        ret = re_matchp(reg, text);
+        free((void*) reg);
+    }
+
+    return ret;
 }
 
 int re_matchp(re_t pattern, const char* text)
@@ -98,81 +98,81 @@ int re_matchp(re_t pattern, const char* text)
     //the below should never happen
     assert( pattern != NULL );
     assert( text != NULL );
-	
-	int idx = -1;
 
-	if (pattern[0].type == BEGIN)
-	{
-		//starts from begin ^
-		return ( (matchpattern(&pattern[1], text)) ? 0 : -1 );
-	}
-	else
-	{
-		do
-		{
-			idx += 1;
-			if (matchpattern(pattern, text))
-			{
-				return idx;
-			}
-		} while (*text++ != '\0');
-	
-		return -1;
-	}
-    
+    int idx = -1;
+
+    if (pattern[0].type == BEGIN)
+    {
+        //starts from begin ^
+        return ( (matchpattern(&pattern[1], text)) ? 0 : -1 );
+    }
+    else
+    {
+        do
+        {
+            idx += 1;
+            if (matchpattern(pattern, text))
+            {
+                return idx;
+            }
+        } while (*text++ != '\0');
+
+        return -1;
+    }
+
     //should not reach there
 }
 
 re_t re_compile(const char* pattern, unsigned int * o_reg_cnt)
 {
     assert(pattern != NULL);
-    
+
     re_t re_compiled = 
-			(re_t) calloc(MIN_REGEXP_OBJECTS, sizeof(struct regex_t));
-    
+            (re_t) calloc(MIN_REGEXP_OBJECTS, sizeof(struct regex_t));
+
     char c;			// current char in pattern
-	unsigned int i = 0;  // index into pattern
-	unsigned int j = 0;  // index into re_compiled
-	unsigned int re_compiled_count = MIN_REGEXP_OBJECTS;
+    unsigned int i = 0;  // index into pattern
+    unsigned int j = 0;  // index into re_compiled
+    unsigned int re_compiled_count = MIN_REGEXP_OBJECTS;
 
 
     while (pattern[i] != '\0')
-	{   
-		/*
+    {   
+        /*
          * last one is reserved for the final one
-		 * check if re_compiled still have space otherwide do:
-         * As far as I remember, + 1 needed because the j counter is
-         * incremented at the end. TODO DEBUG
+         * check if re_compiled still have space otherwide do:
+         * - 1 needed because the j counter is
+         * incremented at the end and the last object is indicating
+         * the end of the array i.e UNUSED.
          */
-         printf("%u %u\r\n", re_compiled_count, j);
-		if ( (re_compiled_count - 1) <= j)
-		{
-			
+        if ( (re_compiled_count - 1) <= j)
+        {
+            
 #ifdef RE_REGEX_INSTANCE_REALLOCATE
-			//reallocate memory
-			re_compiled_count += MIN_REGEXP_OBJECTS;
-			
-			re_t re_temp = 
-				(re_t) realloc(re_compiled, (re_compiled_count * sizeof(struct regex_t)));
-			
-			if (re_temp == NULL)
-			{
-				LOGERR("realloc returned NULL! requested %lu bytes at %s:%u\r\n", 
-					  (re_compiled_count * sizeof(struct regex_t)), 
+            //reallocate memory
+            re_compiled_count += MIN_REGEXP_OBJECTS;
+            
+            re_t re_temp = 
+                (re_t) realloc(re_compiled, (re_compiled_count * sizeof(struct regex_t)));
+            
+            if (re_temp == NULL)
+            {
+                LOGERR("realloc returned NULL! requested %lu bytes at %s:%u\r\n", 
+                      (re_compiled_count * sizeof(struct regex_t)), 
                       __FUNCTION__, 
                       __LINE__);
                       
-				goto re_temp_error;
-			}
-			
-			re_compiled = re_temp;
+                goto re_temp_error;
+            }
+            
+            re_compiled = re_temp;
 #else
-			LOGERR("got run out of free static instances of the REGEXP_OBJECTS! has %u, at %s:%u\r\n",
+            LOGERR("got run out of free static instances of the REGEXP_OBJECTS! has %u, at %s:%u\r\n",
                     MIN_REGEXP_OBJECTS, 
                     __FUNCTION__, 
                     __LINE__);
                     
-			goto re_temp_error;
+            goto re_temp_error;
 #endif
 		
 		}
@@ -369,7 +369,6 @@ re_t re_compile(const char* pattern, unsigned int * o_reg_cnt)
 #ifdef RE_TRUNC_ARRAY_IF_POSSIBLE
 
 	//check if the memory can be truncated
-    printf("reallocating from %u to %u\r\n", re_compiled_count, j)	;
 	if (re_compiled_count > j)
 	{
 		re_compiled_count = j; 

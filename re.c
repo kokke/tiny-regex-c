@@ -130,6 +130,12 @@ re_t re_compile(const char* pattern, unsigned int * o_reg_cnt)
     re_t re_compiled = 
             (re_t) calloc(MIN_REGEXP_OBJECTS, sizeof(struct regex_t));
 
+    if (re_compiled == NULL)
+    {
+        LOGERR("calloc returned NULL at %s:%u\r\n", __FUNCTION__, __LINE__);
+        return NULL;
+    }
+    
     char c;			// current char in pattern
     unsigned int i = 0;  // index into pattern
     unsigned int j = 0;  // index into re_compiled

@@ -91,7 +91,8 @@ extern "C"{
 typedef struct regex_t* re_t;
 
 
-/* Compile regex string pattern to a regex_t-array. */
+/* Compile regex string pattern to a regex_t-array. 
+ * o_reg_cnt can be NULL*/
 re_t re_compile(const char* pattern, unsigned int * o_reg_cnt);
 
 

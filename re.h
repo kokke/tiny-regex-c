@@ -80,6 +80,11 @@
 /*uncomment to send error messages to stderr*/
 //#define BUILD_WITH_ERRORMSG
 
+#define SECTION_OBJECTS(_pat_) \
+    (struct regex_objs_t *) &_pat_->data[_pat_->objoffset]
+    
+#define OFFSET_TO_PATTERN(_pat_, _off_) \
+    &_pat_->data[_off_]
 
 #ifdef __cplusplus
 extern "C"{
@@ -91,13 +96,12 @@ extern "C"{
 typedef struct regex_t* re_t;
 
 
-/* Compile regex string pattern to a regex_t-array. 
- * o_reg_cnt can be NULL*/
+/* Compile regex string pattern to a regex_t-array. */
 re_t re_compile(const char* pattern, unsigned int * o_reg_cnt);
 
 
 /* Find matches of the compiled pattern inside text. */
-int  re_matchp(re_t pattern, const char* text);
+int  re_matchp(re_t regx, const char* text);
 
 
 /* Find matches of the txt pattern inside text (will compile automatically first). */

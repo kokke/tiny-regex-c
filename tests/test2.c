@@ -4,8 +4,18 @@
  */
 
 
+#define _POSIX_C_SOURCE 199309L
+#if __STDC_VERSION__ >= 199901L
+#define _XOPEN_SOURCE 600
+#else
+#define _XOPEN_SOURCE 500
+#endif /* __STDC_VERSION__ */
+
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
+#include <time.h>
+
 #include "re.h"
 
 
@@ -2085,8 +2095,27 @@ int main()
 
     printf("  matching on %lu bytes of test input: ", bufsizes[i]);
     fflush(stdout);
+    
+    int rrr = 0;
+    struct timespec start, stop;
+        struct timespec startp, stopp;
+        clock_gettime(CLOCK_MONOTONIC, &start);
+        clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &startp);
 
-    printf("%d \n", re_match(".+nonexisting.+", buf)); 
+    rrr = re_match(".+nonexisting.+", buf);
+    
+    clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &stopp);
+        clock_gettime(CLOCK_MONOTONIC, &stop);
+
+        double result = (stop.tv_sec - start.tv_sec) * 
+                    1e6 + (stop.tv_nsec - start.tv_nsec) / 1e3;    // in microseconds
+        double resultp = (stopp.tv_sec - startp.tv_sec) * 
+                    1e6 + (stopp.tv_nsec - startp.tv_nsec) / 1e3;    // in microseconds
+        
+        printf("%d \n", rrr); 
+        
+        printf("test %d took %lf uS / %lf uS MONOTONIC/PROCESS\r\n", i, result, resultp);
+    
 
     buf[bufsizes[i]] = old;
   }

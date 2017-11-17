@@ -58,6 +58,7 @@ typedef struct regex_objs_t
 typedef struct regex_t
 {
     unsigned int objoffset;     //indicates the start of the regex objs
+    unsigned int totalsize;     //total size of data[]
     unsigned char data[];       //data
 } regex_t;
 
@@ -79,6 +80,7 @@ static int matchwhitespace(char c);
 static int matchmetachar(char c, const char* str);
 static int matchrange(char c, const char* str);
 static int ismetachar(char c);
+static int __re_compile_count(const char* pattern, unsigned int * objs, unsigned int * strln);
 
 
 
@@ -86,7 +88,7 @@ static int ismetachar(char c);
 int re_match(const char* pattern, const char* text)
 {
     int ret = -1;
-    re_t reg = re_compile(pattern, NULL);
+    re_t reg = re_compile(pattern);
     if (reg == NULL)
     {
         LOGERR("failed at %s:%u\r\n", __FUNCTION__, __LINE__);
@@ -131,7 +133,7 @@ int re_matchp(re_t regx, const char* text)
     //should not reach there
 }
 
-int __re_compile_count(const char* pattern, unsigned int * objs, unsigned int * strln)
+static int __re_compile_count(const char* pattern, unsigned int * objs, unsigned int * strln)
 {
     assert(objs != NULL);
     assert(strln != NULL);
@@ -192,7 +194,7 @@ int __re_compile_count(const char* pattern, unsigned int * objs, unsigned int * 
 	return 0;
 }
 
-re_t re_compile(const char* pattern, unsigned int * o_reg_cnt)
+re_t re_compile(const char* pattern)
 {
     assert(pattern != NULL);
     
@@ -219,7 +221,10 @@ re_t re_compile(const char* pattern, unsigned int * o_reg_cnt)
         return NULL;
     }
     
+    //setting the fields
     re_compiled->objoffset = strln;
+    re_compiled->totalsize = totallen - sizeof(struct regex_t);
+    
     char * patrns = (char *) &re_compiled->data[0];
     //objects starts at end of the strln
     struct regex_objs_t * re_obj = 
@@ -386,12 +391,6 @@ re_t re_compile(const char* pattern, unsigned int * o_reg_cnt)
 	
 	//move next, j now indicates the amount of the recs from 0..j-1
 	j++;
-
-	//return the result
-	if (o_reg_cnt != NULL)
-	{
-		*o_reg_cnt = objs;
-	}
 	
 	return re_compiled;
 	
@@ -404,11 +403,25 @@ re_temp_error:
 	return NULL;
 }
 
+unsigned int re_get_size(re_t regx)
+{
+    if (regx == NULL)
+    {
+        return 0;
+    }
+    else
+    {
+        return regx->totalsize;
+    }
+}
+
 #ifdef RE_BUILDWITH_DEBUG
 
-void re_print(re_t pattern, unsigned int count)
+void re_print(re_t pattern)
 {
   assert(pattern != NULL);
+  
+  unsigned int count = COUNT_NODES(pattern);
   
   //convert pattern
   struct regex_objs_t * objs = SECTION_OBJECTS(pattern);
@@ -455,12 +468,14 @@ void re_print(re_t pattern, unsigned int count)
 	return;
 }
 
-void re_trace(re_t pattern, unsigned int count)
+void re_trace(re_t pattern)
 {
     assert(pattern != NULL);
     
 	const char* types[] = { "UNUSED", "DOT", "BEGIN", "END", "QUESTIONMARK", "STAR", "PLUS", "CHAR", "CHAR_CLASS", "INV_CHAR_CLASS", "DIGIT", "NOT_DIGIT", "ALPHA", "NOT_ALPHA", "WHITESPACE", "NOT_WHITESPACE", "BRANCH" };
 	
+    unsigned int count = COUNT_NODES(pattern);
+    
     //convert pattern
     struct regex_objs_t * objs = SECTION_OBJECTS(pattern);
     

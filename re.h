@@ -61,6 +61,9 @@
     
 #define OFFSET_TO_PATTERN(_pat_, _off_) \
     &_pat_->data[_off_]
+    
+#define COUNT_NODES(_pat_) \
+    (_pat_->totalsize - _pat_->objoffset) / sizeof(struct regex_objs_t)
 
 #ifdef __cplusplus
 extern "C"{
@@ -73,8 +76,10 @@ typedef struct regex_t* re_t;
 
 
 /* Compile regex string pattern to a regex_t-array. */
-re_t re_compile(const char* pattern, unsigned int * o_reg_cnt);
+re_t re_compile(const char* pattern);
 
+/*returns the size of the structure*/
+unsigned int re_get_size(re_t regx);
 
 /* Find matches of the compiled pattern inside text. */
 int  re_matchp(re_t regx, const char* text);
@@ -84,11 +89,11 @@ int  re_matchp(re_t regx, const char* text);
 int  re_match(const char* pattern, const char* text);
 
 #ifdef RE_BUILDWITH_DEBUG
-void re_print(re_t pattern, unsigned int count);
-void re_trace(re_t pattern, unsigned int count);
+void re_print(re_t pattern);
+void re_trace(re_t pattern);
 #else
-#define re_print(_a_, _b_)
-#define re_trace(_a_, _b_)
+#define re_print(UNUSED)
+#define re_trace(UNUSED)
 #endif
 
 #ifdef __cplusplus

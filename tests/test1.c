@@ -124,11 +124,9 @@ int main()
             if (m != (-1))
             {
                 printf("\n");
-                unsigned int ln = 0;
               
-
-                re_t res = re_compile(pattern, &ln);
-                re_print(res, ln);
+                re_t res = re_compile(pattern);
+                re_print(res);
                 
                 fprintf(stderr, "[%lu/%lu]: pattern '%s' matched '%s' unexpectedly. \n", (i+1), ntests, pattern, text);
                 nfailed += 1;
@@ -139,10 +137,9 @@ int main()
             if (m == (-1))
             {
                 printf("\n");
-                unsigned int ln = 0;
                 
-                re_t res = re_compile(pattern, &ln);
-                re_print(res, ln);
+                re_t res = re_compile(pattern);
+                re_print(res);
                 
                 fprintf(stderr, "[%lu/%lu]: pattern '%s' didn't match '%s' as expected. \n", (i+1), ntests, pattern, text);
                 nfailed += 1;

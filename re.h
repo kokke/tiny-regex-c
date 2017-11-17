@@ -33,14 +33,6 @@
 	#define RE_MATCH_RECURSIVE 
 #endif //RE_MATCH_RECURSIVE
 
-#ifndef RE_REGEX_INSTANCE_REALLOCATE
-    #define RE_REGEX_INSTANCE_REALLOCATE
-#endif
-
-#ifndef RE_TRUNC_ARRAY_IF_POSSIBLE
-    #define RE_TRUNC_ARRAY_IF_POSSIBLE
-#endif
-
 #ifndef RE_BUILDWITH_DEBUG
     #define RE_BUILDWITH_DEBUG
 #endif
@@ -51,28 +43,12 @@
     #define LOGERR(...) fprintf(stderr, __VA_ARGS__)
 #endif
 
-#ifndef RE_CHAR_CLASS_LENGTH
-    //per struct regex_t instance
-    #define RE_CHAR_CLASS_LENGTH 20
-#endif
-
-#ifndef MIN_REGEXP_OBJECTS
-    //min number of regex symbols in expression
-    #define MIN_REGEXP_OBJECTS 30
-#endif
-
 /*
  * Below can be uncommented to modify the behaviour or optimizations
  */
  
 /*uncomment to use on a small stack machines*/
 //#undef RE_MATCH_RECURSIVE
-
-/*uncomment to disallow grow of the regex_t array upon MIN_REGEXP_OBJECTS limit reached*/
-//#undef RE_REGEX_INSTANCE_REALLOCATE
-
-/*uncomment to disaalow the optimization of the regex_t array by truncating unused objects*/
-//#undef RE_TRUNC_ARRAY_IF_POSSIBLE
 
 /*uncommnet to remove debug functions (print and trace functions)*/
 //#undef RE_BUILDWITH_DEBUG

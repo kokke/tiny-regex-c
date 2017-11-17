@@ -16,6 +16,8 @@
 #include <stdlib.h>
 #include <time.h>
 
+#define BUILD_WITH_ERRORMSG
+
 #include "re.h"
 
 

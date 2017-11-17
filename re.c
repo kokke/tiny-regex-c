@@ -37,10 +37,7 @@
 
 /* Overrides for the re.h: */
 
-#define MIN_REGEXP_OBJECTS          30    /* Max number of regex symbols in expression. */
-#define RE_CHAR_CLASS_LENGTH        40    /* Max length of character-class buffer in.   */
-
-#define BUILD_WITH_ERRORMSG
+//#define BUILD_WITH_ERRORMSG
 
 #include "re.h"
 
@@ -64,6 +61,11 @@ typedef struct regex_t
     unsigned char data[];       //data
 } regex_t;
 
+/*
+ *  data[]:
+ * offset0: text
+ * offset(objoffset): array of struct regex_objs_t
+ */
 
 /* Private function declarations: */
 static int matchpattern(regex_t* reg, regex_objs_t * pattern, const char* text);

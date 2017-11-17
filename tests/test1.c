@@ -13,7 +13,9 @@
 #include <stdlib.h>
 #include <time.h>
 
+#define BUILD_WITH_ERRORMSG
 #define RE_BUILDWITH_DEBUG
+
 #include "re.h"
 
 

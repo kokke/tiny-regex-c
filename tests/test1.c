@@ -1,9 +1,21 @@
 /*
  * Testing various regex-patterns
  */
+#define _POSIX_C_SOURCE 199309L
+#if __STDC_VERSION__ >= 199901L
+#define _XOPEN_SOURCE 600
+#else
+#define _XOPEN_SOURCE 500
+#endif /* __STDC_VERSION__ */
 
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
+#include <time.h>
+
+#define BUILD_WITH_ERRORMSG
+#define RE_BUILDWITH_DEBUG
+
 #include "re.h"
 
 
@@ -71,7 +83,7 @@ char* test_vector[][3] =
 };
 
 
-void re_print(re_t);
+//void re_print(re_t, unsigne);
 
 int main()
 {
@@ -87,15 +99,37 @@ int main()
         pattern = test_vector[i][1];
         text = test_vector[i][2];
         should_fail = (test_vector[i][0] == NOK);
+        
+        int m = 0;
+        
+        struct timespec start, stop;
+        struct timespec startp, stopp;
+        clock_gettime(CLOCK_MONOTONIC, &start);
+        clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &startp);
+        
+        m = re_match(pattern, text);
+        
+        clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &stopp);
+        clock_gettime(CLOCK_MONOTONIC, &stop);
 
-        int m = re_match(pattern, text);
-
+        double result = (stop.tv_sec - start.tv_sec) * 
+                    1e6 + (stop.tv_nsec - start.tv_nsec) / 1e3;    // in microseconds
+        double resultp = (stopp.tv_sec - startp.tv_sec) * 
+                    1e6 + (stopp.tv_nsec - startp.tv_nsec) / 1e3;    // in microseconds
+        
+        printf("test %lu took %lf uS / %lf uS MONOTONIC/PROCESS\r\n", i, result, resultp);
+        
         if (should_fail)
         {
             if (m != (-1))
             {
                 printf("\n");
-                re_print(re_compile(pattern));
+                unsigned int ln = 0;
+              
+
+                re_t res = re_compile(pattern, &ln);
+                re_print(res, ln);
+                
                 fprintf(stderr, "[%lu/%lu]: pattern '%s' matched '%s' unexpectedly. \n", (i+1), ntests, pattern, text);
                 nfailed += 1;
             }
@@ -105,7 +139,11 @@ int main()
             if (m == (-1))
             {
                 printf("\n");
-                re_print(re_compile(pattern));
+                unsigned int ln = 0;
+                
+                re_t res = re_compile(pattern, &ln);
+                re_print(res, ln);
+                
                 fprintf(stderr, "[%lu/%lu]: pattern '%s' didn't match '%s' as expected. \n", (i+1), ntests, pattern, text);
                 nfailed += 1;
             }

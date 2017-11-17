@@ -1,0 +1,23 @@
+Testing pathological pattern '.+nonexisting.+' to force worst-case asymptotic performance: 
+  matching on 64 bytes of test input: -1 
+test 0 took 173.490000 uS / 169.213000 uS MONOTONIC/PROCESS
+  matching on 128 bytes of test input: -1 
+test 1 took 617.472000 uS / 615.575000 uS MONOTONIC/PROCESS
+  matching on 256 bytes of test input: -1 
+test 2 took 2509.025000 uS / 2506.112000 uS MONOTONIC/PROCESS
+  matching on 512 bytes of test input: -1 
+test 3 took 8711.717000 uS / 8355.600000 uS MONOTONIC/PROCESS
+  matching on 1024 bytes of test input: -1 
+test 4 took 15015.199000 uS / 14989.637000 uS MONOTONIC/PROCESS
+  matching on 2048 bytes of test input: -1 
+test 5 took 59601.663000 uS / 59541.001000 uS MONOTONIC/PROCESS
+  matching on 4096 bytes of test input: -1 
+test 6 took 237507.491000 uS / 237440.825000 uS MONOTONIC/PROCESS
+  matching on 8192 bytes of test input: -1 
+test 7 took 957331.358000 uS / 957229.377000 uS MONOTONIC/PROCESS
+  matching on 16384 bytes of test input: -1 
+test 8 took 3812519.962000 uS / 3810960.564000 uS MONOTONIC/PROCESS
+  matching on 32768 bytes of test input: -1 
+test 9 took 15246479.649000 uS / 15244700.224000 uS MONOTONIC/PROCESS
+
+

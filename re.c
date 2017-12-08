@@ -110,7 +110,7 @@ re_t re_compile(const char* pattern)
   int i = 0;  /* index into pattern        */
   int j = 0;  /* index into re_compiled    */
 
-  while (pattern[i] != '\0')
+  while (pattern[i] != '\0' && (j+1 < MAX_REGEXP_OBJECTS))
   {
     c = pattern[i];
 

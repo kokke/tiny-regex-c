@@ -31,6 +31,7 @@
 
 #include "re.h"
 #include <stdio.h>
+#include <stdlib.h>
 
 /* Definitions: */
 
@@ -182,6 +183,10 @@ re_t re_compile(const char* pattern)
         while (    (pattern[++i] != ']')
                 && (pattern[i]   != '\0')) /* Missing ] */
         {
+          if (ccl_bufidx >= MAX_CHAR_CLASS_LEN-1) { /* We also have to consider the string terminator */
+              fputs("exceeded internal buffer!", stderr);
+              exit(-1);
+          }
           ccl_buf[ccl_bufidx++] = pattern[i];
         }
         /* Null-terminate string end */

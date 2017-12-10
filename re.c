@@ -183,11 +183,16 @@ re_t re_compile(const char* pattern)
         while (    (pattern[++i] != ']')
                 && (pattern[i]   != '\0')) /* Missing ] */
         {
-          if (ccl_bufidx >= MAX_CHAR_CLASS_LEN-1) { /* We also have to consider the string terminator */
+          if (ccl_bufidx >= MAX_CHAR_CLASS_LEN) {
               fputs("exceeded internal buffer!\n", stderr);
               exit(-1);
           }
           ccl_buf[ccl_bufidx++] = pattern[i];
+        }
+        if (ccl_bufidx >= MAX_CHAR_CLASS_LEN) {
+            /* Catches cases such as [00000000000000000000000000000000000000][ */
+            fputs("exceeded internal buffer!\n", stderr);
+            exit(-1);
         }
         /* Null-terminate string end */
         ccl_buf[ccl_bufidx++] = 0;

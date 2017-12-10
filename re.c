@@ -184,14 +184,13 @@ re_t re_compile(const char* pattern)
                 && (pattern[i]   != '\0')) /* Missing ] */
         {
           if (ccl_bufidx >= MAX_CHAR_CLASS_LEN-1) { /* We also have to consider the string terminator */
-              fputs("exceeded internal buffer!", stderr);
+              fputs("exceeded internal buffer!\n", stderr);
               exit(-1);
           }
           ccl_buf[ccl_bufidx++] = pattern[i];
         }
         /* Null-terminate string end */
         ccl_buf[ccl_bufidx++] = 0;
-        ccl_buf[ccl_bufidx] = 0;
         re_compiled[j].ccl = &ccl_buf[buf_begin];
       } break;
 
@@ -269,7 +268,9 @@ static int matchalphanum(char c)
 }
 static int matchrange(char c, const char* str)
 {
-  return ((c != '-') && (str[0] != '-') && (str[1] == '-') && (str[2] != '\0') && ((c >= str[0]) && (c <= str[2])));
+  return ((c != '-') && (str[0] != '\0') && (str[0] != '-') &&
+         (str[1] == '-') && (str[1] != '\0') &&
+         (str[2] != '\0') && ((c >= str[0]) && (c <= str[2])));
 }
 static int ismetachar(char c)
 {

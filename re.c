@@ -38,7 +38,7 @@
 #define MAX_CHAR_CLASS_LEN      40    /* Max length of character-class buffer in.   */
 
 
-enum { UNUSED, DOT, BEGIN, END, QUESTIONMARK, STAR, PLUS, CHAR, CHAR_CLASS, INV_CHAR_CLASS, DIGIT, NOT_DIGIT, ALPHA, NOT_ALPHA, WHITESPACE, NOT_WHITESPACE, BRANCH };
+enum { UNUSED, DOT, BEGIN, END, QUESTIONMARK, STAR, PLUS, CHAR, CHAR_CLASS, INV_CHAR_CLASS, DIGIT, NOT_DIGIT, ALPHA, NOT_ALPHA, WHITESPACE, NOT_WHITESPACE, /* BRANCH */ };
 
 typedef struct regex_t
 {
@@ -125,7 +125,7 @@ re_t re_compile(const char* pattern)
       case '*': {    re_compiled[j].type = STAR;            } break;
       case '+': {    re_compiled[j].type = PLUS;            } break;
       case '?': {    re_compiled[j].type = QUESTIONMARK;    } break;
-      case '|': {    re_compiled[j].type = BRANCH;          } break;
+/*    case '|': {    re_compiled[j].type = BRANCH;          } break; <-- not working properly */
 
       /* Escaped character-classes (\s \w ...): */
       case '\\':
@@ -430,10 +430,12 @@ static int matchpattern(regex_t* pattern, const char* text)
     {
       return (text[0] == '\0');
     }
+/*  Branching is not working properly
     else if (pattern[1].type == BRANCH)
     {
       return (matchpattern(pattern, text) || matchpattern(&pattern[2], text));
     }
+*/
   }
   while ((text[0] != '\0') && matchone(*pattern++, *text++));
 

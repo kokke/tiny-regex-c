@@ -54,6 +54,7 @@ char* test_vector[][3] =
   { OK,  "b[k-z]*",          "ab"          },
   { NOK, "[0-9]",            "  - "        },
   { OK,  "[^0-9]",           "  - "        },
+  { OK,  "0|",               "0|"          },
   { OK,  "[Hh]ello [Ww]orld\\s*[!]?", "Hello world !" },
   { OK,  "[Hh]ello [Ww]orld\\s*[!]?", "hello world !" },
   { OK,  "[Hh]ello [Ww]orld\\s*[!]?", "Hello World !" },

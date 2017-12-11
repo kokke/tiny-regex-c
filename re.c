@@ -31,7 +31,6 @@
 
 #include "re.h"
 #include <stdio.h>
-#include <stdlib.h>
 
 /* Definitions: */
 
@@ -76,26 +75,28 @@ int re_match(const char* pattern, const char* text)
 
 int re_matchp(re_t pattern, const char* text)
 {
-  int idx = -1;
-
-  if (pattern[0].type == BEGIN)
+  if (pattern != 0)
   {
-    return ((matchpattern(&pattern[1], text)) ? 0 : -1);
-  }
-  else
-  {
-    do
+    if (pattern[0].type == BEGIN)
     {
-      idx += 1;
-      if (matchpattern(pattern, text))
-      {
-        return idx;
-      }
+      return ((matchpattern(&pattern[1], text)) ? 0 : -1);
     }
-    while (*text++ != '\0');
+    else
+    {
+      int idx = -1;
 
-    return -1;
+      do
+      {
+        idx += 1;
+        if (matchpattern(pattern, text))
+        {
+          return idx;
+        }
+      }
+      while (*text++ != '\0');
+    }
   }
+  return -1;
 }
 
 re_t re_compile(const char* pattern)
@@ -184,15 +185,16 @@ re_t re_compile(const char* pattern)
                 && (pattern[i]   != '\0')) /* Missing ] */
         {
           if (ccl_bufidx >= MAX_CHAR_CLASS_LEN) {
-              fputs("exceeded internal buffer!\n", stderr);
-              exit(-1);
+              //fputs("exceeded internal buffer!\n", stderr);
+              return 0;
           }
           ccl_buf[ccl_bufidx++] = pattern[i];
         }
-        if (ccl_bufidx >= MAX_CHAR_CLASS_LEN) {
+        if (ccl_bufidx >= MAX_CHAR_CLASS_LEN)
+        {
             /* Catches cases such as [00000000000000000000000000000000000000][ */
-            fputs("exceeded internal buffer!\n", stderr);
-            exit(-1);
+            //fputs("exceeded internal buffer!\n", stderr);
+            return 0;
         }
         /* Null-terminate string end */
         ccl_buf[ccl_bufidx++] = 0;

@@ -31,6 +31,7 @@
 
 #include "re.h"
 #include <stdio.h>
+#include <stdlib.h>
 
 /* Definitions: */
 
@@ -110,7 +111,7 @@ re_t re_compile(const char* pattern)
   int i = 0;  /* index into pattern        */
   int j = 0;  /* index into re_compiled    */
 
-  while (pattern[i] != '\0')
+  while (pattern[i] != '\0' && (j+1 < MAX_REGEXP_OBJECTS))
   {
     c = pattern[i];
 
@@ -182,11 +183,19 @@ re_t re_compile(const char* pattern)
         while (    (pattern[++i] != ']')
                 && (pattern[i]   != '\0')) /* Missing ] */
         {
+          if (ccl_bufidx >= MAX_CHAR_CLASS_LEN) {
+              fputs("exceeded internal buffer!\n", stderr);
+              exit(-1);
+          }
           ccl_buf[ccl_bufidx++] = pattern[i];
+        }
+        if (ccl_bufidx >= MAX_CHAR_CLASS_LEN) {
+            /* Catches cases such as [00000000000000000000000000000000000000][ */
+            fputs("exceeded internal buffer!\n", stderr);
+            exit(-1);
         }
         /* Null-terminate string end */
         ccl_buf[ccl_bufidx++] = 0;
-        ccl_buf[ccl_bufidx] = 0;
         re_compiled[j].ccl = &ccl_buf[buf_begin];
       } break;
 
@@ -264,7 +273,9 @@ static int matchalphanum(char c)
 }
 static int matchrange(char c, const char* str)
 {
-  return ((c != '-') && (str[0] != '-') && (str[1] == '-') && (str[2] != '\0') && ((c >= str[0]) && (c <= str[2])));
+  return ((c != '-') && (str[0] != '\0') && (str[0] != '-') &&
+         (str[1] == '-') && (str[1] != '\0') &&
+         (str[2] != '\0') && ((c >= str[0]) && (c <= str[2])));
 }
 static int ismetachar(char c)
 {

@@ -30,7 +30,7 @@ The main design goal of this library is to be small, correct, self contained and
   > gcc -Os -c re.c
   > size re.o
       text	   data	    bss	    dec	    hex	filename
-      2341	      0	    544	   2885	    b45	re.o
+      2026	    136	    544	   2706	    a92	re.o
       
   ```
   For 8-bit AVR using AVR-GCC 4.8.1 it's around 2kb code and less RAM :
@@ -38,7 +38,7 @@ The main design goal of this library is to be small, correct, self contained and
   > avr-gcc -Os -c re.c
   > size re.o
       text	   data	    bss	    dec	    hex	filename
-      2132	      0	    130	   2262	    8d6	re.o
+      2062	      0	    130	   2192	    890	re.o
   ```
 
 ### API

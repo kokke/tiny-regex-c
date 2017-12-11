@@ -60,6 +60,7 @@ char* test_vector[][3] =
   { OK,  "[Hh]ello [Ww]orld\\s*[!]?", "Hello world!   " },
   { OK,  "[Hh]ello [Ww]orld\\s*[!]?", "Hello world  !" },
   { OK,  "[Hh]ello [Ww]orld\\s*[!]?", "hello World    !" },
+  { OK,  "0|",           "0|"              },
 /*
   { OK,  "[^\\w][^-1-4]",     ")T"          },
   { OK,  "[^\\w][^-1-4]",     ")^"          },

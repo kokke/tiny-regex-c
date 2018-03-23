@@ -123,7 +123,7 @@ For more usage examples I encourage you to look at the code in the `tests`-folde
 - Fix implementation of branches (`|`), and see if that can lead us closer to groups as well, e.g. `(a|b)+`.
 - Add `example.c` that demonstrates usage.
 - Add `tests/test_perf.c` for performance and time measurements.
-- Testing: add matching on purely random data, comparing with Python's `re`. Currently only matching known positives - need to verify rejection as well.
+- Testing: Improve pattern rejection testing.
 
 ### FAQ
 - *Q: What differentiates this library from other C regex implementations?*

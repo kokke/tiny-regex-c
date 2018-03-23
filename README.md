@@ -30,16 +30,26 @@ The main design goal of this library is to be small, correct, self contained and
   > gcc -Os -c re.c
   > size re.o
       text	   data	    bss	    dec	    hex	filename
-      2026	    136	    544	   2706	    a92	re.o
+      2319        0     544    2863     b2f re.o
       
+  ```
+  For ARM/Thumb using GCC 4.8.1 it's around 1.5kb code and less RAM :
+  ```
+  > arm-none-eabi-gcc -Os -mthumb -c re.c
+  > size re.o
+      text     data     bss     dec     hex filename
+      1418        0     280    1698     6a2 re.o
+
   ```
   For 8-bit AVR using AVR-GCC 4.8.1 it's around 2kb code and less RAM :
   ```
   > avr-gcc -Os -c re.c
   > size re.o
       text	   data	    bss	    dec	    hex	filename
-      2062	      0	    130	   2192	    890	re.o
+      2128	      0	    130	   2258	    8d2	re.o
   ```
+
+
 
 ### API
 This is the public / exported API:

@@ -109,7 +109,6 @@ if (match_idx != -1)
 For more usage examples I encourage you to look at the code in the `tests`-folder.
 
 ### TODO
-- Fix non-greedy quantifiers, [see #12](https://github.com/kokke/tiny-regex-c/issues/12)
 - Fix the implementation of inverted character classes.
 - Fix implementation of branches (`|`), and see if that can lead us closer to groups as well, e.g. `(a|b)+`.
 - Add `example.c` that demonstrates usage.

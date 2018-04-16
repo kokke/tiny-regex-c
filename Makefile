@@ -4,14 +4,15 @@ CC := gcc
 # Number of random text expressions to generate, for random testing
 NRAND_TESTS := 1000
 
-PYTHON != if (python --version 2>&1 | grep -q 'Python 2\..*'); then \
-            echo 'python';                                          \
-          elif command -v python2 >/dev/null 2>&1; then             \
-            echo 'python2';                                         \
-          else                                                      \
-            echo 'Error: no compatible python version found.' >&2;  \
-            exit 1;                                                 \
-          fi
+PYTHON := python
+# PYTHON != if (python --version 2>&1 | grep -q 'Python 2\..*'); then \
+#             echo 'python';                                          \
+#           elif command -v python2 >/dev/null 2>&1; then             \
+#             echo 'python2';                                         \
+#           else                                                      \
+#             echo 'Error: no compatible python version found.' >&2;  \
+#             exit 1;                                                 \
+#           fi
 
 # Flags to pass to compiler
 CFLAGS := -O3 -Wall -Wextra -std=c99 -I.

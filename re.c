@@ -88,8 +88,12 @@ int re_matchp(re_t pattern, const char* text)
       do
       {
         idx += 1;
+				
         if (matchpattern(pattern, text))
         {
+					if (text[0] == '\0')
+						return -1;
+				
           return idx;
         }
       }
@@ -377,13 +381,17 @@ static int matchplus(regex_t p, regex_t* pattern, const char* text)
 
 static int matchquestion(regex_t p, regex_t* pattern, const char* text)
 {
-  if ((text[0] != '\0') && matchone(p, *text++))
+  if ((text[0] != '\0') && matchone(p, text[0]))
   {
-    matchpattern(pattern, text);
+    int match = 0;
+    match = matchpattern(pattern, &text[0]);
+    if (!match) {
+      return matchpattern(pattern, &text[1]);
+    }
+		return match;
   }
   return 1;
 }
-
 
 
 #if 0
@@ -426,7 +434,7 @@ static int matchpattern(regex_t* pattern, const char* text)
   {
     if ((pattern[0].type == UNUSED) || (pattern[1].type == QUESTIONMARK))
     {
-      return matchquestion(pattern[1], &pattern[2], text);
+      return matchquestion(pattern[0], &pattern[2], text);
     }
     else if (pattern[1].type == STAR)
     {
@@ -453,7 +461,3 @@ static int matchpattern(regex_t* pattern, const char* text)
 }
 
 #endif
-
-
-
-

@@ -83,6 +83,8 @@ char* test_vector[][3] =
   { OK,  "[^\\w][^-1-4]",     " x"          },
   { OK,  "[^\\w][^-1-4]",     "$b"          },
 */
+  { OK,  ".?bar",                      "real_bar"        },
+  { NOK, ".?bar",                      "real_foo"        },
 };
 
 

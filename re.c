@@ -88,12 +88,12 @@ int re_matchp(re_t pattern, const char* text)
       do
       {
         idx += 1;
-				
+        
         if (matchpattern(pattern, text))
         {
-					if (text[0] == '\0')
-						return -1;
-				
+          if (text[0] == '\0')
+            return -1;
+        
           return idx;
         }
       }
@@ -388,7 +388,7 @@ static int matchquestion(regex_t p, regex_t* pattern, const char* text)
     if (!match) {
       return matchpattern(pattern, &text[1]);
     }
-		return match;
+    return match;
   }
   return 1;
 }

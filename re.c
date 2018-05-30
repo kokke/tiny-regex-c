@@ -381,6 +381,10 @@ static int matchplus(regex_t p, regex_t* pattern, const char* text)
 
 static int matchquestion(regex_t p, regex_t* pattern, const char* text)
 {
+  if ((text[0] == '\0') && p.type != UNUSED)
+  {
+    return matchpattern(pattern, &text[0]);
+  }
   if ((text[0] != '\0') && matchone(p, text[0]))
   {
     int match = 0;

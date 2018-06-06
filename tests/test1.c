@@ -75,6 +75,7 @@ char* test_vector[][3] =
   { OK,  "[Hh]ello [Ww]orld\\s*[!]?", "Hello world!   "  },
   { OK,  "[Hh]ello [Ww]orld\\s*[!]?", "Hello world  !"   },
   { OK,  "[Hh]ello [Ww]orld\\s*[!]?", "hello World    !" },
+  { NOK, "\\d\\d?:\\d\\d?:\\d\\d?",   "a:0"              }, /* Failing test case reported in https://github.com/kokke/tiny-regex-c/issues/12 */
 /*
   { OK,  "[^\\w][^-1-4]",     ")T"          },
   { OK,  "[^\\w][^-1-4]",     ")^"          },

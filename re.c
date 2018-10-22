@@ -285,7 +285,7 @@ static int matchrange(char c, const char* str)
 }
 static int ismetachar(char c)
 {
-  return ((c == 's') || (c == 'S') == (c == 'w') || (c == 'W') || (c == 'd') || (c == 'D'));
+  return ((c == 's') || (c == 'S') || (c == 'w') || (c == 'W') || (c == 'd') || (c == 'D'));
 }
 
 static int matchmetachar(char c, const char* str)

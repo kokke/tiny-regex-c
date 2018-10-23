@@ -29,7 +29,7 @@ The main design goal of this library is to be small, correct, self contained and
   ```
   > gcc -Os -c re.c
   > size re.o
-      text	   data	    bss	    dec	    hex	filename
+      text     data     bss     dec	    hex	filename
       2319        0     544    2863     b2f re.o
       
   ```
@@ -45,8 +45,8 @@ The main design goal of this library is to be small, correct, self contained and
   ```
   > avr-gcc -Os -c re.c
   > size re.o
-      text	   data	    bss	    dec	    hex	filename
-      2128	      0	    130	   2258	    8d2	re.o
+      text     data     bss     dec     hex filename
+      2128        0     130    2258     8d2 re.o
   ```
 
 

@@ -188,7 +188,17 @@ re_t re_compile(const char* pattern)
         while (    (pattern[++i] != ']')
                 && (pattern[i]   != '\0')) /* Missing ] */
         {
-          if (ccl_bufidx >= MAX_CHAR_CLASS_LEN) {
+          if (pattern[i] == '\\')
+          {
+            if (ccl_bufidx >= MAX_CHAR_CLASS_LEN - 1)
+            {
+              //fputs("exceeded internal buffer!\n", stderr);
+              return 0;
+            }
+            ccl_buf[ccl_bufidx++] = pattern[i++];
+          }
+          else if (ccl_bufidx >= MAX_CHAR_CLASS_LEN)
+          {
               //fputs("exceeded internal buffer!\n", stderr);
               return 0;
           }
@@ -381,20 +391,13 @@ static int matchplus(regex_t p, regex_t* pattern, const char* text)
 
 static int matchquestion(regex_t p, regex_t* pattern, const char* text)
 {
-  if ((text[0] == '\0') && p.type != UNUSED)
-  {
-    return matchpattern(pattern, &text[0]);
-  }
-  if ((text[0] != '\0') && matchone(p, text[0]))
-  {
-    int match = 0;
-    match = matchpattern(pattern, &text[0]);
-    if (!match) {
-      return matchpattern(pattern, &text[1]);
-    }
-    return match;
-  }
-  return 1;
+  if (p.type == UNUSED)
+    return 1;
+  if (matchpattern(pattern, text))
+      return 1;
+  if (*text && matchone(p, *text++))
+    return matchpattern(pattern, text);
+  return 0;
 }
 
 

@@ -100,6 +100,7 @@ int main()
     size_t ntests = sizeof(test_vector) / sizeof(*test_vector);
     size_t nfailed = 0;
     size_t i;
+    re_t regex;
 
     for (i = 0; i < ntests; ++i)
     {
@@ -114,7 +115,8 @@ int main()
             if (m != (-1))
             {
                 printf("\n");
-                re_print(re_compile(pattern));
+                re_compile(regex, pattern);
+                re_print(regex);
                 fprintf(stderr, "[%lu/%lu]: pattern '%s' matched '%s' unexpectedly. \n", (i+1), ntests, pattern, text);
                 nfailed += 1;
             }
@@ -124,7 +126,8 @@ int main()
             if (m == (-1))
             {
                 printf("\n");
-                re_print(re_compile(pattern));
+                re_compile(regex, pattern);
+                re_print(regex);
                 fprintf(stderr, "[%lu/%lu]: pattern '%s' didn't match '%s' as expected. \n", (i+1), ntests, pattern, text);
                 nfailed += 1;
             }

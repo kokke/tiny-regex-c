@@ -34,22 +34,10 @@
 
 /* Definitions: */
 
-#define MAX_REGEXP_OBJECTS      30    /* Max number of regex symbols in expression. */
 #define MAX_CHAR_CLASS_LEN      40    /* Max length of character-class buffer in.   */
 
 
-enum { UNUSED, DOT, BEGIN, END, QUESTIONMARK, STAR, PLUS, CHAR, CHAR_CLASS, INV_CHAR_CLASS, DIGIT, NOT_DIGIT, ALPHA, NOT_ALPHA, WHITESPACE, NOT_WHITESPACE, /* BRANCH */ };
-
-typedef struct regex_t
-{
-  unsigned char  type;   /* CHAR, STAR, etc.                      */
-  union
-  {
-    unsigned char  ch;   /*      the character itself             */
-    unsigned char* ccl;  /*  OR  a pointer to characters in class */
-  };
-} regex_t;
-
+enum { UNUSED, DOT, BEGIN, END, QUESTIONMARK, STAR, PLUS, CHAR, CHAR_CLASS, INV_CHAR_CLASS, DIGIT, NOT_DIGIT, ALPHA, NOT_ALPHA, WHITESPACE, NOT_WHITESPACE, /* BRANCH, */ FAIL};
 
 
 /* Private function declarations: */
@@ -70,12 +58,16 @@ static int ismetachar(char c);
 /* Public functions: */
 int re_match(const char* pattern, const char* text)
 {
-  return re_matchp(re_compile(pattern), text);
+  re_t regex;
+
+  re_compile(regex, pattern);
+  return re_matchp(regex, text);
 }
 
 int re_matchp(re_t pattern, const char* text)
 {
-  if (pattern != 0)
+  /* FAIL is a sentinel value indicating compilation of the pattern failed. */
+  if (pattern[0].type != FAIL)
   {
     if (pattern[0].type == BEGIN)
     {
@@ -103,12 +95,11 @@ int re_matchp(re_t pattern, const char* text)
   return -1;
 }
 
-re_t re_compile(const char* pattern)
+int re_compile(re_t re_compiled, const char* pattern)
 {
   /* The sizes of the two static arrays below substantiates the static RAM usage of this module.
      MAX_REGEXP_OBJECTS is the max number of symbols in the expression.
      MAX_CHAR_CLASS_LEN determines the size of buffer for chars in all char-classes in the expression. */
-  static regex_t re_compiled[MAX_REGEXP_OBJECTS];
   static unsigned char ccl_buf[MAX_CHAR_CLASS_LEN];
   int ccl_bufidx = 1;
 
@@ -193,14 +184,14 @@ re_t re_compile(const char* pattern)
             if (ccl_bufidx >= MAX_CHAR_CLASS_LEN - 1)
             {
               //fputs("exceeded internal buffer!\n", stderr);
-              return 0;
+              goto fail;
             }
             ccl_buf[ccl_bufidx++] = pattern[i++];
           }
           else if (ccl_bufidx >= MAX_CHAR_CLASS_LEN)
           {
               //fputs("exceeded internal buffer!\n", stderr);
-              return 0;
+              goto fail;
           }
           ccl_buf[ccl_bufidx++] = pattern[i];
         }
@@ -208,7 +199,7 @@ re_t re_compile(const char* pattern)
         {
             /* Catches cases such as [00000000000000000000000000000000000000][ */
             //fputs("exceeded internal buffer!\n", stderr);
-            return 0;
+            goto fail;
         }
         /* Null-terminate string end */
         ccl_buf[ccl_bufidx++] = 0;
@@ -228,12 +219,16 @@ re_t re_compile(const char* pattern)
   /* 'UNUSED' is a sentinel used to indicate end-of-pattern */
   re_compiled[j].type = UNUSED;
 
-  return (re_t) re_compiled;
+  return j;
+
+fail:
+  re_compiled[0].type = FAIL;
+  return -1;
 }
 
 void re_print(regex_t* pattern)
 {
-  const char* types[] = { "UNUSED", "DOT", "BEGIN", "END", "QUESTIONMARK", "STAR", "PLUS", "CHAR", "CHAR_CLASS", "INV_CHAR_CLASS", "DIGIT", "NOT_DIGIT", "ALPHA", "NOT_ALPHA", "WHITESPACE", "NOT_WHITESPACE", "BRANCH" };
+  const char* types[] = { "UNUSED", "DOT", "BEGIN", "END", "QUESTIONMARK", "STAR", "PLUS", "CHAR", "CHAR_CLASS", "INV_CHAR_CLASS", "DIGIT", "NOT_DIGIT", "ALPHA", "NOT_ALPHA", "WHITESPACE", "NOT_WHITESPACE", /* "BRANCH", */ "FAIL"};
 
   int i;
   for (i = 0; i < MAX_REGEXP_OBJECTS; ++i)

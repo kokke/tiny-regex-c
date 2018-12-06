@@ -31,14 +31,25 @@
 extern "C"{
 #endif
 
+#define MAX_REGEXP_OBJECTS      30    /* Max number of regex symbols in expression. */
+
+typedef struct regex_t
+{
+  unsigned char  type;   /* CHAR, STAR, etc.                      */
+  union
+  {
+    unsigned char  ch;   /*      the character itself             */
+    unsigned char* ccl;  /*  OR  a pointer to characters in class */
+  };
+} regex_t;
+
+/* Typedef'd array to get abstract datatype. */
+typedef regex_t re_t[MAX_REGEXP_OBJECTS];
 
 
-/* Typedef'd pointer to get abstract datatype. */
-typedef struct regex_t* re_t;
-
-
-/* Compile regex string pattern to a regex_t-array. */
-re_t re_compile(const char* pattern);
+/* Compile regex string pattern to a regex_t-array and copy to re_compiled.
+ * Return the number of regex objects copied or -1 upon error. */
+int re_compile(re_t re_compiled, const char* pattern);
 
 
 /* Find matches of the compiled pattern inside text. */

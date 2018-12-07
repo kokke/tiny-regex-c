@@ -48,7 +48,7 @@ typedef regex_t re_t[MAX_REGEXP_OBJECTS];
 
 
 /* Compile regex string pattern to a regex_t-array and copy to re_compiled.
- * Return the number of regex objects copied or -1 upon error. */
+ * Return the number of regex objects copied upon success or -1 upon error. */
 int re_compile(re_t re_compiled, const char* pattern);
 
 

@@ -183,16 +183,14 @@ int re_compile(re_t re_compiled, const char* pattern)
             if (ccl_bufidx >= MAX_CHAR_CLASS_LEN - 1)
             {
               //fputs("exceeded internal buffer!\n", stderr);
-              re_compiled[0].type = FAIL;
-              return -1;
+              goto fail;
             }
             ccl_buf[ccl_bufidx++] = pattern[i++];
           }
           else if (ccl_bufidx >= MAX_CHAR_CLASS_LEN)
           {
               //fputs("exceeded internal buffer!\n", stderr);
-              re_compiled[0].type = FAIL;
-              return -1;
+              goto fail;
           }
           ccl_buf[ccl_bufidx++] = pattern[i];
         }
@@ -200,8 +198,7 @@ int re_compile(re_t re_compiled, const char* pattern)
         {
             /* Catches cases such as [00000000000000000000000000000000000000][ */
             //fputs("exceeded internal buffer!\n", stderr);
-            re_compiled[0].type = FAIL;
-            return -1;
+            goto fail;
         }
         /* Null-terminate string end */
         ccl_buf[ccl_bufidx++] = 0;
@@ -222,6 +219,10 @@ int re_compile(re_t re_compiled, const char* pattern)
   re_compiled[j].type = UNUSED;
 
   return j;
+
+fail:
+  re_compiled[0].type = FAIL;
+  return -1;
 }
 
 void re_print(regex_t* pattern)

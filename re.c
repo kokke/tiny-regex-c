@@ -66,6 +66,7 @@ int re_match(const char* pattern, const char* text)
 
 int re_matchp(re_t pattern, const char* text)
 {
+  /* FAIL is a sentinel value indicating compilation of the pattern failed. */
   if (pattern[0].type != FAIL)
   {
     if (pattern[0].type == BEGIN)

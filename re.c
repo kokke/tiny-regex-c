@@ -60,10 +60,8 @@ int re_match(const char* pattern, const char* text)
 {
   re_t regex;
 
-  if (re_compile(regex, pattern) > -1)
-    return re_matchp(regex, text);
-  else
-    return -1;
+  re_compile(regex, pattern);
+  return re_matchp(regex, text);
 }
 
 int re_matchp(re_t pattern, const char* text)

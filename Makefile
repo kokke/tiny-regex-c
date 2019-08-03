@@ -32,9 +32,9 @@ clean:
 test: all
 	@$(test $(PYTHON))
 	@echo
-	@echo Testing hand-picked regex\'s:
+	@echo Hand-picked regexes and strings:
 	@./tests/test1
-	@echo Testing patterns against $(NRAND_TESTS) random strings matching the Python implementation and comparing:
+	@echo Hand-picked regexes and $(NRAND_TESTS) random strings that should match, tested against Python:
 	@echo
 	@$(PYTHON) ./scripts/regex_test.py \\d+\\w?\\D\\d             $(NRAND_TESTS)
 	@$(PYTHON) ./scripts/regex_test.py \\s+[a-zA-Z0-9?]*          $(NRAND_TESTS)
@@ -47,7 +47,7 @@ test: all
 	@$(PYTHON) ./scripts/regex_test.py [^\\d]+\\s?[\\w]*          $(NRAND_TESTS)
 	@$(PYTHON) ./scripts/regex_test.py a+b*[ac]*.+.*.[\\.].       $(NRAND_TESTS)
 	@$(PYTHON) ./scripts/regex_test.py a?b[ac*]*.?[\\]+[?]?       $(NRAND_TESTS)
-	@#python ./scripts/regex_test.py [1-5-]+[-1-2]-[-]         $(NRAND_TESTS)
+	@$(PYTHON) ./scripts/regex_test.py [1-5-]+[-1-2]-[-]          $(NRAND_TESTS)
 	@$(PYTHON) ./scripts/regex_test.py [-1-3]-[-]+                $(NRAND_TESTS)
 	@$(PYTHON) ./scripts/regex_test.py [1-5]+[-1-2]-[\\-]         $(NRAND_TESTS)
 	@$(PYTHON) ./scripts/regex_test.py [-1-2]*                    $(NRAND_TESTS)
@@ -71,11 +71,11 @@ test: all
 	@$(PYTHON) ./scripts/regex_test.py \\d                        $(NRAND_TESTS)
 	@$(PYTHON) ./scripts/regex_test.py [\\d]                      $(NRAND_TESTS)
 	@$(PYTHON) ./scripts/regex_test.py [^\\d]                     $(NRAND_TESTS)
-	@#python ./scripts/regex_test.py [^-1-4]                    $(NRAND_TESTS)
+	@$(PYTHON) ./scripts/regex_test.py [^-1-4]                    $(NRAND_TESTS)
 	@echo
 	@echo
 	@echo
-	@echo Testing rejection of patterns against $(NRAND_TESTS) random strings also rejected by the Python implementation:
+	@echo Hand-picked regexes and $(NRAND_TESTS) random strings that should fail to match, tested against Python:
 	@echo
 	@$(PYTHON) ./scripts/regex_test_neg.py \\d+                   $(NRAND_TESTS)
 	@$(PYTHON) ./scripts/regex_test_neg.py [a-z]+                 $(NRAND_TESTS)
@@ -100,6 +100,7 @@ test: all
 	@$(PYTHON) ./scripts/regex_test_neg.py .*123faerdig           $(NRAND_TESTS)
 	@echo
 	@echo
+	@echo A performace test:
 	@./tests/test2
 	@echo
 	@echo

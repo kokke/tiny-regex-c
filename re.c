@@ -136,8 +136,13 @@ static size_t matchone(re_Token pattern, const char* text, size_t i);
 /* matchoneclc: matches one class character, returns number of chars eaten */
 static size_t matchoneclc(ClassChar pattern, const char* text, size_t i);
 
+/* printone: prints one regex token */
+static void printone(re_Token pattern);
+/* printoneclc: prints one class character */
+static void printoneclc(ClassChar pattern);
+
 /*
- * PUBLIC FUNCTIONS
+ * COMPILATION FUNCTIONS
  */
 
 void re_compile(Regex* compiled, const char* pattern)
@@ -172,65 +177,6 @@ void re_compile(Regex* compiled, const char* pattern)
 	/* indicate the end of the regex */
 	compiled->tokens[ri].type = TOKEN_NULLTERM;
 }
-
-size_t re_rmatch(Regex pattern, const char* text, size_t* length)
-{
-	for (size_t i = 0; text[i]; ++i) {
-		errno = 0;
-		const size_t lengthBuf = matchpattern(pattern.tokens, text, i);
-		if (!errno) {
-			/* first successful match */
-			if (length)
-				*length = lengthBuf;
-			return i;
-		}
-	}
-	/* no matches: errno is already set by matchpattern */
-	return 0;
-}
-
-size_t re_smatch(const char* pattern, const char* text, size_t* length)
-{
-	Regex regex;
-	errno = 0;
-	re_compile(&regex, pattern);
-	if (errno)
-		return 0;
-
-	return re_rmatch(regex, text, length);
-}
-
-size_t re_rmatchg(Regex pattern, const char* text)
-{
-	size_t i = 0;
-	size_t c = 0;
-	while (text[i]) {
-		size_t length = 0;
-		errno = 0;
-		i += re_rmatch(pattern, text+i, &length);
-		if (errno)
-			return c;
-		else
-			++c;
-		i += length;
-	}
-	return c;
-}
-
-size_t re_smatchg(const char* pattern, const char* text)
-{
-	Regex regex;
-	errno = 0;
-	re_compile(&regex, pattern);
-	if (errno)
-		return 0;
-
-	return re_rmatchg(regex, text);
-}
-
-/*
- * PRIVATE COMPILATION FUNCTIONS
- */
 
 static size_t compileone(re_Token* compiled, const char* pattern, ClassChar cclbuf[CCLBUFLEN], size_t* ccli)
 {
@@ -501,8 +447,63 @@ static size_t compileatomic(re_Token* compiled, const char* pattern)
 }
 
 /*
- * PRIVATE MATCHING FUNCTIONS
+ * MATCHING FUNCTIONS
  */
+
+size_t re_rmatch(Regex pattern, const char* text, size_t* length)
+{
+	for (size_t i = 0; text[i]; ++i) {
+		errno = 0;
+		const size_t lengthBuf = matchpattern(pattern.tokens, text, i);
+		if (!errno) {
+			/* first successful match */
+			if (length)
+				*length = lengthBuf;
+			return i;
+		}
+	}
+	/* no matches: errno is already set by matchpattern */
+	return 0;
+}
+
+size_t re_smatch(const char* pattern, const char* text, size_t* length)
+{
+	Regex regex;
+	errno = 0;
+	re_compile(&regex, pattern);
+	if (errno)
+		return 0;
+
+	return re_rmatch(regex, text, length);
+}
+
+size_t re_rmatchg(Regex pattern, const char* text)
+{
+	size_t i = 0;
+	size_t c = 0;
+	while (text[i]) {
+		size_t length = 0;
+		errno = 0;
+		i += re_rmatch(pattern, text+i, &length);
+		if (errno)
+			return c;
+		else
+			++c;
+		i += length;
+	}
+	return c;
+}
+
+size_t re_smatchg(const char* pattern, const char* text)
+{
+	Regex regex;
+	errno = 0;
+	re_compile(&regex, pattern);
+	if (errno)
+		return 0;
+
+	return re_rmatchg(regex, text);
+}
 
 static size_t matchpattern(re_Token* pattern, const char* text, size_t i)
 {
@@ -778,67 +779,80 @@ size_t matchany(const char* text, size_t i)
 	return 1;
 }
 
+/*
+ * PRINTING FUNCTIONS
+ */
+
 void re_print(Regex pattern)
 {
 	for (size_t i = 0; pattern.tokens[i].type != TOKEN_NULLTERM; ++i) {
-		switch (pattern.tokens[i].type) {
-			case TOKEN_METABSL:
-				printf("\\%c", metabsls[pattern.tokens[i].meta].pattern);
-				break;
-			case TOKEN_METACHAR:
-				printf("%c", metachars[pattern.tokens[i].meta].pattern);
-				break;
-			case TOKEN_CHARCLASS: /* fallthrough */
-			case TOKEN_INVCHARCLASS:
-				printf("[");
-				if (pattern.tokens[i].type == TOKEN_INVCHARCLASS)
-					printf("^");
-				for (size_t j = 0; pattern.tokens[i].ccl[j].type != CCL_NULLTERM; ++j) {
-					switch (pattern.tokens[i].ccl[j].type) {
-						case CCL_METABSL:
-							printf("\\%c", metabsls[pattern.tokens[i].ccl[j].meta].pattern);
-							break;
-						case CCL_CHARRANGE:
-							printf("%c", pattern.tokens[i].ccl[j].first);
-							if (pattern.tokens[i].ccl[j].last != pattern.tokens[i].ccl[j].first) {
-								printf("-%c", pattern.tokens[i].ccl[j].last);
-							}
-							break;
-						default:
-							/* shouldn't happen */
-							break;
-					}
-				}
-				printf("]");
-				break;
-			case TOKEN_CHAR:
-				printf("%c", pattern.tokens[i].ch);
-				break;
-			default:
-				/* shouldn't happen */
-				break;
-		}
-		for (size_t j = 0; j < sizeof(quantifiers)/sizeof(quantifiers[0]); ++j) {
-			if (pattern.tokens[i].quantifiermin == quantifiers[j].min && pattern.tokens[i].quantifiermax == quantifiers[j].max) {
-				printf("%c", quantifiers[j].pattern);
-				goto nocharquantifier;
-			}
-		}
-		if (pattern.tokens[i].quantifiermin != 1 || pattern.tokens[i].quantifiermax != 1) {
-			printf("{");
-			if (pattern.tokens[i].quantifiermin != 0)
-				printf("%"PRIuFAST8, pattern.tokens[i].quantifiermin);
-			if (pattern.tokens[i].quantifiermax == UINT_FAST8_MAX)
-				printf(",");
-			else if (pattern.tokens[i].quantifiermax != pattern.tokens[i].quantifiermin)
-				printf(",%"PRIuFAST8, pattern.tokens[i].quantifiermax);
-			printf("}");
-		}
-nocharquantifier:
-		if (!pattern.tokens[i].greedy)
-			printf("?");
-		if (pattern.tokens[i].atomic)
-			printf("+");
+		printone(pattern.tokens[i]);
 	}
 	printf("\n");
+}
+
+static void printone(re_Token pattern)
+{
+	switch (pattern.type) {
+		case TOKEN_METABSL:
+			printf("\\%c", metabsls[pattern.meta].pattern);
+			break;
+		case TOKEN_METACHAR:
+			printf("%c", metachars[pattern.meta].pattern);
+			break;
+		case TOKEN_CHARCLASS: /* fallthrough */
+		case TOKEN_INVCHARCLASS:
+			printf("[");
+			if (pattern.type == TOKEN_INVCHARCLASS)
+				printf("^");
+			for (size_t i = 0; pattern.ccl[i].type != CCL_NULLTERM; ++i)
+				printoneclc(pattern.ccl[i]);
+			printf("]");
+			break;
+		case TOKEN_CHAR:
+			printf("%c", pattern.ch);
+			break;
+		default:
+			/* shouldn't happen */
+			break;
+	}
+	for (size_t i = 0; i < sizeof(quantifiers)/sizeof(quantifiers[0]); ++i) {
+		if (pattern.quantifiermin == quantifiers[i].min && pattern.quantifiermax == quantifiers[i].max) {
+			printf("%c", quantifiers[i].pattern);
+			goto nocharquantifier;
+		}
+	}
+	if (pattern.quantifiermin != 1 || pattern.quantifiermax != 1) {
+		printf("{");
+		if (pattern.quantifiermin != 0)
+			printf("%"PRIuFAST8, pattern.quantifiermin);
+		if (pattern.quantifiermax == UINT_FAST8_MAX)
+			printf(",");
+		else if (pattern.quantifiermax != pattern.quantifiermin)
+			printf(",%"PRIuFAST8, pattern.quantifiermax);
+		printf("}");
+	}
+nocharquantifier:
+	if (!pattern.greedy)
+		printf("?");
+	if (pattern.atomic)
+		printf("+");
+}
+
+static void printoneclc(ClassChar pattern)
+{
+	switch (pattern.type) {
+		case CCL_METABSL:
+			printf("\\%c", metabsls[pattern.meta].pattern);
+			break;
+		case CCL_CHARRANGE:
+			printf("%c", pattern.first);
+			if (pattern.last != pattern.first) {
+				printf("-%c", pattern.last);
+			}
+			break;
+		default:
+			/* shouldn't happen */
+			break;
+	}
 }

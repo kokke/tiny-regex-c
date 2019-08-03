@@ -679,7 +679,7 @@ size_t matchnewline(const char* text, size_t i)
 size_t matchwordboundary(const char* text, size_t i)
 {
 	if (
-		(i > 0 && iswordchar(text[i-1]) == !iswordchar(text[i])) ||
+		(i > 0 && iswordchar(text[i-1]) != !iswordchar(text[i])) ||
 		(i == 0 && !iswordchar(text[0]))
 	) {
 		errno = EINVAL;
@@ -690,7 +690,7 @@ size_t matchwordboundary(const char* text, size_t i)
 size_t matchnotwordboundary(const char* text, size_t i)
 {
 	if (
-		(i > 0 && iswordchar(text[i-1]) != !iswordchar(text[i])) ||
+		(i > 0 && iswordchar(text[i-1]) == !iswordchar(text[i])) ||
 		(i == 0 && iswordchar(text[0]))
 	) {
 		errno = EINVAL;

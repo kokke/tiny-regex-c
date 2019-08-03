@@ -117,7 +117,6 @@ For more usage examples I encourage you to look at the code in the `tests`-folde
 
 ### TODO
 - tests that include atomics, word boundaries and \R
-- remove unnecessary comments
 - Add `example.c` that demonstrates usage.
 - implement | operator
 - implement i (case Insensitive) and s (Single line/DOTALL) modifiers

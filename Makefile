@@ -21,6 +21,7 @@ all:
 	@$(CC) $(CFLAGS) re.c tests/test2.c     -o tests/test2
 	@$(CC) $(CFLAGS) re.c tests/test_rand.c -o tests/test_rand
 	@$(CC) $(CFLAGS) re.c tests/test_rand_neg.c -o tests/test_rand_neg
+	@$(CC) $(CFLAGS) re.c example.c -o example
 
 clean:
 	@rm -f tests/test1 tests/test2 tests/test_rand

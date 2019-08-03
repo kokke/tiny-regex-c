@@ -13,15 +13,15 @@
 #include <errno.h>
 #include "re.h"
 
-int main(int argc, char** argv)
+int main(int argc, char* argv[])
 {
-	if (argc == 3) {
-		errno = 0;
-		re_smatch(argv[1], argv[2], NULL);
-		if (errno)
-			return 0;
-	} else {
-		printf("\nUsage: %s <PATTERN> <TEXT> \n", argv[0]);
+	if (argc != 3) {
+		printf("\nUsage: %s <PATTERN> <TEXT>\n", argv[0]);
+		return -2;
 	}
-	return -2;
+	errno = 0;
+	re_smatch(argv[1], argv[2], NULL);
+	if (!errno)
+		return -2;
+	return 0;
 }

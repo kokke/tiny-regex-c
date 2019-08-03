@@ -14,24 +14,7 @@
  */
 
 /*
- * In this library, unless explicitly stated otherwise, all functions return the number of characters eaten, and they report errors by setting errno and returning 0
- */
-
-/*
- * TODO:
- * implement atomics
- * remove unnecessary comments
- * implement | operator
- * implement i (insensitive), s (DOTALL) modifiers
- * groups:
- * - open bracket
- * - nothing if the group is capturing, ? if it isn't
- * - list of modifiers, preceeded by - to disable
- * - equals for lookaround, ! for inverted, nothing or a colon otherwise
- * - a regex
- * - close bracket
- *   (note that a capturing inverted group (!regex) will always capture nothing
- * backreferences up to \99
+ * In this library, unless explicitly stated otherwise, all functions return the number of characters eaten, and they report errors by setting errno and returning 0.
  */
 
 #include "re.h"
@@ -507,11 +490,27 @@ size_t re_smatchg(const char* pattern, const char* text)
 
 static size_t matchpattern(re_Token* pattern, const char* text, size_t i)
 {
-	const size_t oldi = i;
+	const size_t starti = i;
 
 	if (pattern[0].type == TOKEN_NULLTERM)
 		return 0;
 
+	/* consume as many tokens as you can iteratively, to avoid as much recursion as possible */
+	for (;;) {
+		if (pattern[0].type == TOKEN_NULLTERM)
+			return 0;
+		if (pattern[0].quantifiermin != pattern[0].quantifiermax && !pattern[0].atomic)
+			break;
+		uint_fast8_t count = pattern[0].greedy ? pattern[0].quantifiermax : pattern[0].quantifiermin;
+		i += matchcount(pattern[0], &count, text, i);
+		if (count < pattern[0].quantifiermin)
+			return 0;
+		++pattern;
+	}
+
+	const size_t oldi = i;
+
+	/* all the tokens that can be iteratively consumed have been, now use recursion */
 	uint_fast8_t count = pattern[0].greedy ? pattern[0].quantifiermax : pattern[0].quantifiermin;
 	for (;;) {
 		i = oldi;
@@ -537,7 +536,7 @@ static size_t matchpattern(re_Token* pattern, const char* text, size_t i)
 	}
 
 	errno = 0;
-	return i-oldi;
+	return i-starti;
 }
 
 static size_t matchcount(re_Token pattern, uint_fast8_t* count, const char* text, size_t i)

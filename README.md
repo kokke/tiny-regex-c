@@ -116,11 +116,11 @@ if (!errno)
 For more usage examples I encourage you to look at the code in the `tests`-folder.
 
 ### TODO
-- implement atomics
+- tests that include atomics, word boundaries and \R
 - remove unnecessary comments
 - Add `example.c` that demonstrates usage.
 - implement | operator
-- implement i (case Insensitive) and s (DOTALL) modifiers
+- implement i (case Insensitive) and s (Single line/DOTALL) modifiers
 - implement groups and captures
 - Add `tests/test_perf.c` for performance and time measurements.
 

@@ -88,7 +88,9 @@ Test testvector[] =
 	{ true,  ".?bar",					  "real_bar"		 },
 	{ false, ".?bar",					  "real_foo"		 },
 	{ false, "X?Y",						  "Z"				 },
-	{ true,  "\\d+\\w?12",                "9593"             }
+	{ true,  "\\d+\\w?12",                "959312"           },
+	{ true,  "\\d+5",                     "12345"            },
+	{ false, "\\d++5",                    "12345"            }
 };
 
 

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 """
-	This program generates random text that matches a given regex-pattern.
+    This program generates random text that matches a given regex-pattern.
 	The pattern is given via sys.argv and the generated text is passed to
 	the binary 'tests/test_rand' to check if the generated text also matches
 	the regex-pattern in the C implementation.
@@ -64,7 +64,7 @@ while repeats >= 0:
 		ret = call([prog, "\"%s\"" % pattern, "\"%s\"" % example])
 		if ret != 0:
 			escaped = repr(example) # escapes special chars for better printing
-			print("		 FAIL : doesn't match %s as expected [%s]." % (escaped, ", ".join([("0x%02x" % ord(e)) for e in example]) ))
+			print("\tFAIL: doesn't match %s as expected [%s]." % (escaped, ", ".join([("0x%02x" % ord(e)) for e in example]) ))
 			nfails += 1
 
 	except:

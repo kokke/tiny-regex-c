@@ -24,10 +24,7 @@ all:
 	@$(CC) $(CFLAGS) re.c example.c -o example
 
 clean:
-	@rm -f tests/test1 tests/test2 tests/test_rand
-	@#@$(foreach test_bin,$(TEST_BINS), rm -f $(test_bin) ; )
-	@rm -f a.out
-	@rm -f *.o
+	@rm -f tests/test1 tests/test2 tests/test_rand example
 
 
 test: all

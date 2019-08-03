@@ -2078,15 +2078,15 @@ int main()
 		const char old = buf[bufsizes[i]];
 		buf[bufsizes[i]] = 0;
 
-		printf("	matching on %lu bytes of test input\n", bufsizes[i]);
+		printf("\tmatching on %lu bytes of test input\n", bufsizes[i]);
 		fflush(stdout);
-		re_smatch(".+nonexisting.+", buf, NULL);
+		re_smatch(".+nonexisting.+", buf, NULL, 0);
 
 		buf[bufsizes[i]] = old;
 	}
 
 	printf("\n\n");
-		
+	
 	return 0;
 }
 

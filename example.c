@@ -32,8 +32,8 @@ int main(int argc, char* argv[])
 	while (fgets(buffer, sizeof(buffer), stdin) != NULL) {
 		/* set errno to 0 to check for errors reliably */
 		errno = 0;
-		/* match input with pattern */
-		re_rmatch(pattern, buffer, NULL);
+		/* match input with pattern, not saving the length and with no modifiers */
+		re_rmatch(pattern, buffer, NULL, 0);
 		if (!errno)
 			/* rmatch succeeded, so print out the line */
 			printf("%s", buffer);

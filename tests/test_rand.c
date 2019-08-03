@@ -7,8 +7,8 @@
 	See ./scripts/regex_test.py and the Makefile for this project for the gritty details.
 */
 
-#include <stdio.h>
 #include <errno.h>
+#include <stdio.h>
 #include "re.h"
 
 int main(int argc, char* argv[])
@@ -18,7 +18,7 @@ int main(int argc, char* argv[])
 		return -2;
 	}
 	errno = 0;
-	re_smatch(argv[1], argv[2], NULL);
+	re_smatch(argv[1], argv[2], NULL, 0);
 	if (errno)
 		return -2;
 	return 0;

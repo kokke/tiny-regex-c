@@ -1,40 +1,42 @@
 # tiny-regex-c: a small regex implementation in C
-### Description
+## Description
 Small and portable [Regular Expression](https://en.wikipedia.org/wiki/Regular_expression) (regex) library written in C. 
 
 Design is inspired by Rob Pike's regex-code for the book *"Beautiful Code"* [available online here](http://www.cs.princeton.edu/courses/archive/spr09/cos333/beautiful.html).
 
 Supports a subset of the syntax and semantics of the Python standard library implementation (the `re`-module).
 
-### Current status
+## Current status
 All supported regex-operators seem to work properly according to the test-set.
 
 I think you should test the patterns you are going to use. You can easily modify the test-harness to generate tests for your intended patterns to check for compliance.
 
 **I will gladly accept patches correcting bugs.**
 
-### Design goals
+## Design goals
 The main design goal of this library is to be small, correct, self contained and use few resources while retaining acceptable performance and feature completeness. Clarity of the code is also highly valued.
 
-### Notable features and omissions
-- Small code and binary size: <1000 SLOC, ~5kb binary for x86. Statically #define'd memory usage / allocation.
-- No use of dynamic memory allocation (i.e. no calls to `malloc` / `free`).
+## Notable features and omissions
+- No use of dynamic memory allocation (i.e. no calls to `malloc` or `free`).
 - No support for multiline mode, \A, \z or \Z; use ^, $ and \R instead.
 - No octal, hexadecimal, unicode or control character escape sequences; use C's built-in ones instead.
 - No POSIX classes (e.g. [:alnum:]).
 - No atomic groups (?>...); use the atomic quantifier instead.
-- No support for capturing groups or named capture: `(^P<name>group)` etc.
+- No support for named capture: `(^P<name>group)` etc.
+- No inline modifier changes (?i) etc; use groups instead.
 - Groups are reworked to act the same way but provide more features. Now, a group consists of the following items:
 	- An open bracket.
 	- Nothing if the group is capturing, and ? if it isn't.
 	- A list of modifiers in any order, with each one being preceeded by a dash (minus sign) to disable it.
+	- A less than sign if the group matches backwards.
 	- An equals sign if the group is a lookaround (doesn't 'eat' any characters); an exclamation mark if the group is inverted, and nothing or a colon otherwise.
 	- A regex.
 	- A close bracket.
 
 	Note that a capturing inverted group (e.g. (!regex) ) will always capture nothing.
-- Thorough testing : [exrex](https://github.com/asciimoo/exrex) is used to randomly generate test-cases from regex patterns, which are fed into the regex code for verification. Try `make test` to generate a few thousand tests cases yourself.
-- Compiled for x86 using GCC 4.7.4 and optimizing for size, the binary takes up ~2-3kb code space and allocates ~0.5kb RAM :
+- For testing, [exrex](https://github.com/asciimoo/exrex) is used to randomly generate test-cases from regex patterns, which are fed into the regex code for verification. Try `make test` to generate a few thousand tests cases yourself.
+- Small code and binary size: <1000 SLOC, ~5kb binary for x86. Statically #define'd memory usage / allocation.
+- Compiled for x86 using GCC 4.7.4 and optimizing for size, the binary takes up ~5kb code space and allocates ~0.2kb RAM:
   ```
   > gcc -Os -c re.c
   > size re.o
@@ -43,7 +45,7 @@ The main design goal of this library is to be small, correct, self contained and
       
   ```
 
-### API
+## API
 This is the public / exported API:
 ```C
 /* re_compile: compile regex string pattern to a Regex */
@@ -62,7 +64,7 @@ size_t re_smatchg(const char* pattern, const char* text);
 void re_print(Regex pattern);
 ```
 
-### Supported regex-operators
+## Supported regex-operators
 The following features / regex-operators are supported by this library.
 
   -  `.`         Dot, matches any character
@@ -86,7 +88,7 @@ The following features / regex-operators are supported by this library.
   -  `\b`       A word boundary (where one side is \w and the other is \W)
   -  `\B`       Non-word boundary
 
-### Usage
+## Usage
 Compile a regex from ASCII-string (char-array) to a custom pattern structure using `re_compile()`.
 
 Search a text-string for a regex and get an index into the string, using `re_smatch()` or `re_rmatch()`.
@@ -95,7 +97,7 @@ The returned index points to the first place in the string, where the regex patt
 
 If the regular expression doesn't match, then 0 is returned and errno is set.
 
-### Examples
+## Examples
 Example of usage:
 ```C
 /* Standard null-terminated C-string to search: */
@@ -115,14 +117,13 @@ if (!errno)
 
 For more usage examples I encourage you to look at the code in the `tests`-folder.
 
-### TODO
-- tests that include atomics, word boundaries and \R
-- Add `example.c` that demonstrates usage.
-- implement | operator
-- implement i (case Insensitive) and s (Single line/DOTALL) modifiers
-- implement groups and captures
+## TODO
+- Tests that include atomics, word boundaries, \R and modifiers
+- Implement | operator
+- Implement groups and captures
+- Add file sizes for other architectures in README.md
 - Add `tests/test_perf.c` for performance and time measurements.
 
-### License
+## License
 All material in this repository is in the public domain.
 

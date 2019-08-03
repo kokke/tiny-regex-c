@@ -77,17 +77,20 @@ typedef struct Regex
 	size_t ccli; /* index into buffer */
 } Regex;
 
+#define MOD_I 0b00000001 /* case Insensitive mode */
+#define MOD_S 0b00000010 /* Single line (DOTALL) mode */
+
 /* re_compile: compile regex string pattern to a Regex */
 void re_compile(Regex* compiled, const char* pattern);
 
 /* re_match: returns index of first match of pattern in text */
 /* stores the length of the match in length if it is not NULL */
-size_t re_rmatch(Regex pattern, const char* text, size_t* length);
-size_t re_smatch(const char* pattern, const char* text, size_t* length);
+size_t re_rmatch(Regex pattern, const char* text, size_t* length, uint_fast8_t modifiers);
+size_t re_smatch(const char* pattern, const char* text, size_t* length, uint_fast8_t modifiers);
 
 /* re_matchg: returns number of matches of pattern in text */
-size_t re_rmatchg(Regex pattern, const char* text);
-size_t re_smatchg(const char* pattern, const char* text);
+size_t re_rmatchg(Regex pattern, const char* text, uint_fast8_t modifiers);
+size_t re_smatchg(const char* pattern, const char* text, uint_fast8_t modifiers);
 
 /* re_print: prints a regex to stdout */
 void re_print(Regex pattern);

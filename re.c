@@ -5,12 +5,12 @@
  *
  * Changes from other Regexes:
  * ---------------------------
- *	no multiline mode, \A, \z or \Z; use ^, $ and \R instead
- *	no (?i), (?s), etc; use modifiers in groups (?is:...) instead
- *	no octal, hexadecimal, unicode, control character escape sequences; use C's built-in ones instead
- *	lookarounds and groups are changed to have more features and be more consistent
- *	no POSIX classes
- *	no atomic groups (?>...); use the atomic instead (?...)!+
+ *  no multiline mode, \A, \z or \Z; use ^, $ and \R instead
+ *  no (?i), (?s), etc; use modifiers in groups (?is:...) instead
+ *  no octal, hexadecimal, unicode, control character escape sequences; use C's built-in ones instead
+ *  lookarounds and groups are changed to have more features and be more consistent
+ *  no POSIX classes
+ *  no atomic groups (?>...); use the atomic instead (?...)!+
  */
 
 /*
@@ -37,25 +37,25 @@ static int iswordchar(int c)
  * DEFINITIONS AND DECLARATIONS
  */
 
-static size_t matchwhitespace     (const char* text, size_t i);
-static size_t matchnotwhitespace  (const char* text, size_t i);
-static size_t matchdigit          (const char* text, size_t i);
-static size_t matchnotdigit       (const char* text, size_t i);
-static size_t matchwordchar       (const char* text, size_t i);
-static size_t matchnotwordchar    (const char* text, size_t i);
-static size_t matchnewline        (const char* text, size_t i);
-static size_t matchwordboundary   (const char* text, size_t i);
-static size_t matchnotwordboundary(const char* text, size_t i);
+static size_t matchwhitespace     (const char* text, size_t i, uint_fast8_t modifiers);
+static size_t matchnotwhitespace  (const char* text, size_t i, uint_fast8_t modifiers);
+static size_t matchdigit          (const char* text, size_t i, uint_fast8_t modifiers);
+static size_t matchnotdigit       (const char* text, size_t i, uint_fast8_t modifiers);
+static size_t matchwordchar       (const char* text, size_t i, uint_fast8_t modifiers);
+static size_t matchnotwordchar    (const char* text, size_t i, uint_fast8_t modifiers);
+static size_t matchnewline        (const char* text, size_t i, uint_fast8_t modifiers);
+static size_t matchwordboundary   (const char* text, size_t i, uint_fast8_t modifiers);
+static size_t matchnotwordboundary(const char* text, size_t i, uint_fast8_t modifiers);
 
-static size_t matchstart          (const char* text, size_t i);
-static size_t matchend            (const char* text, size_t i);
-static size_t matchany            (const char* text, size_t i);
+static size_t matchstart          (const char* text, size_t i, uint_fast8_t modifiers);
+static size_t matchend            (const char* text, size_t i, uint_fast8_t modifiers);
+static size_t matchany            (const char* text, size_t i, uint_fast8_t modifiers);
 
 /* the array of all metabsls (sequences that begin with a backslash) */
 const struct
 {
 	char pattern;
-	size_t (*validator)(const char*, size_t);
+	size_t (*validator)(const char*, size_t, uint_fast8_t);
 }
 metabsls[] =
 {
@@ -74,7 +74,7 @@ metabsls[] =
 const struct
 {
 	char pattern;
-	size_t (*validator)(const char*, size_t);
+	size_t (*validator)(const char*, size_t, uint_fast8_t);
 }
 metachars[] =
 {
@@ -111,13 +111,13 @@ static size_t compilegreedy(re_Token* compiled, const char* pattern);
 static size_t compileatomic(re_Token* compiled, const char* pattern);
 
 /* matchpattern: matches one pattern on a string, returns number of chars eaten */
-static size_t matchpattern(re_Token* pattern, const char* text, size_t i);
+static size_t matchpattern(re_Token* pattern, const char* text, size_t i, uint_fast8_t modifiers);
 /* matchcount: matches one regex token including quantifiers and sets count for number of quantifiers, returns number of characters eaten */
-static size_t matchcount(re_Token pattern, uint_fast8_t* count, const char* text, size_t i);
+static size_t matchcount(re_Token pattern, uint_fast8_t* count, const char* text, size_t i, uint_fast8_t modifiers);
 /* matchone: matches one regex token ignoring quantifiers, returns number of characters eaten */
-static size_t matchone(re_Token pattern, const char* text, size_t i);
+static size_t matchone(re_Token pattern, const char* text, size_t i, uint_fast8_t modifiers);
 /* matchoneclc: matches one class character, returns number of chars eaten */
-static size_t matchoneclc(ClassChar pattern, const char* text, size_t i);
+static size_t matchoneclc(ClassChar pattern, const char* text, size_t i, uint_fast8_t modifiers);
 
 /* printone: prints one regex token */
 static void printone(re_Token pattern);
@@ -417,11 +417,11 @@ static size_t compileatomic(re_Token* compiled, const char* pattern)
  * MATCHING FUNCTIONS
  */
 
-size_t re_rmatch(Regex pattern, const char* text, size_t* length)
+size_t re_rmatch(Regex pattern, const char* text, size_t* length, uint_fast8_t modifiers)
 {
 	for (size_t i = 0; text[i]; ++i) {
 		errno = 0;
-		const size_t lengthBuf = matchpattern(pattern.tokens, text, i);
+		const size_t lengthBuf = matchpattern(pattern.tokens, text, i, modifiers);
 		if (!errno) {
 			/* first successful match */
 			if (length)
@@ -433,7 +433,7 @@ size_t re_rmatch(Regex pattern, const char* text, size_t* length)
 	return 0;
 }
 
-size_t re_smatch(const char* pattern, const char* text, size_t* length)
+size_t re_smatch(const char* pattern, const char* text, size_t* length, uint_fast8_t modifiers)
 {
 	Regex regex;
 	errno = 0;
@@ -441,17 +441,17 @@ size_t re_smatch(const char* pattern, const char* text, size_t* length)
 	if (errno)
 		return 0;
 
-	return re_rmatch(regex, text, length);
+	return re_rmatch(regex, text, length, modifiers);
 }
 
-size_t re_rmatchg(Regex pattern, const char* text)
+size_t re_rmatchg(Regex pattern, const char* text, uint_fast8_t modifiers)
 {
 	size_t i = 0;
 	size_t c = 0;
 	while (text[i]) {
 		size_t length = 0;
 		errno = 0;
-		i += re_rmatch(pattern, text+i, &length);
+		i += re_rmatch(pattern, text+i, &length, modifiers);
 		if (errno)
 			return c;
 		++c;
@@ -460,7 +460,7 @@ size_t re_rmatchg(Regex pattern, const char* text)
 	return c;
 }
 
-size_t re_smatchg(const char* pattern, const char* text)
+size_t re_smatchg(const char* pattern, const char* text, uint_fast8_t modifiers)
 {
 	Regex regex;
 	errno = 0;
@@ -468,10 +468,10 @@ size_t re_smatchg(const char* pattern, const char* text)
 	if (errno)
 		return 0;
 
-	return re_rmatchg(regex, text);
+	return re_rmatchg(regex, text, modifiers);
 }
 
-static size_t matchpattern(re_Token* pattern, const char* text, size_t i)
+static size_t matchpattern(re_Token* pattern, const char* text, size_t i, uint_fast8_t modifiers)
 {
 	const size_t starti = i;
 
@@ -485,7 +485,7 @@ static size_t matchpattern(re_Token* pattern, const char* text, size_t i)
 		if (pattern[0].quantifiermin != pattern[0].quantifiermax && !pattern[0].atomic)
 			break;
 		uint_fast8_t count = pattern[0].greedy ? pattern[0].quantifiermax : pattern[0].quantifiermin;
-		i += matchcount(pattern[0], &count, text, i);
+		i += matchcount(pattern[0], &count, text, i, modifiers);
 		if (count < pattern[0].quantifiermin)
 			return 0;
 		++pattern;
@@ -497,12 +497,12 @@ static size_t matchpattern(re_Token* pattern, const char* text, size_t i)
 	uint_fast8_t count = pattern[0].greedy ? pattern[0].quantifiermax : pattern[0].quantifiermin;
 	for (;;) {
 		i = oldi;
-		i += matchcount(pattern[0], &count, text, i);
+		i += matchcount(pattern[0], &count, text, i, modifiers);
 		if (count < pattern[0].quantifiermin)
 			return 0;
 
 		errno = 0;
-		i += matchpattern(pattern+1, text, i);
+		i += matchpattern(pattern+1, text, i, modifiers);
 
 		if (!errno)
 			break;
@@ -522,13 +522,13 @@ static size_t matchpattern(re_Token* pattern, const char* text, size_t i)
 	return i-starti;
 }
 
-static size_t matchcount(re_Token pattern, uint_fast8_t* count, const char* text, size_t i)
+static size_t matchcount(re_Token pattern, uint_fast8_t* count, const char* text, size_t i, uint_fast8_t modifiers)
 {
 	const size_t oldi = i;
 
 	for (uint_fast8_t c = 0; c < *count; ++c) {
 		errno = 0;
-		i += matchone(pattern, text, i);
+		i += matchone(pattern, text, i, modifiers);
 		if (errno) {
 			*count = c;
 			return i-oldi;
@@ -537,20 +537,20 @@ static size_t matchcount(re_Token pattern, uint_fast8_t* count, const char* text
 	return i-oldi;
 }
 
-static size_t matchone(re_Token pattern, const char* text, size_t i)
+static size_t matchone(re_Token pattern, const char* text, size_t i, uint_fast8_t modifiers)
 {
 	size_t chars;
 	size_t ccli;
 	switch (pattern.type) {
 		case TOKEN_METABSL:
 			errno = 0;
-			chars = metabsls[pattern.meta].validator(text, i);
+			chars = metabsls[pattern.meta].validator(text, i, modifiers);
 			if (errno)
 				return 0;
 			return chars;
 		case TOKEN_METACHAR:
 			errno = 0;
-			chars = metachars[pattern.meta].validator(text, i);
+			chars = metachars[pattern.meta].validator(text, i, modifiers);
 			if (errno)
 				return 0;
 			return chars;
@@ -558,7 +558,7 @@ static size_t matchone(re_Token pattern, const char* text, size_t i)
 			ccli = 0;
 			while (pattern.ccl[ccli].type != CCL_NULLTERM) {
 				errno = 0;
-				i += matchoneclc(pattern.ccl[ccli], text, i);
+				i += matchoneclc(pattern.ccl[ccli], text, i, modifiers);
 				if (!errno)
 					return 1;
 				++ccli;
@@ -570,7 +570,7 @@ static size_t matchone(re_Token pattern, const char* text, size_t i)
 			ccli = 0;
 			while (pattern.ccl[ccli].type != CCL_NULLTERM) {
 				errno = 0;
-				i += matchoneclc(pattern.ccl[ccli], text, i);
+				i += matchoneclc(pattern.ccl[ccli], text, i, modifiers);
 				if (!errno) {
 					/* matchoneclc succeeded; fail the charclass */
 					errno = EINVAL;
@@ -582,7 +582,10 @@ static size_t matchone(re_Token pattern, const char* text, size_t i)
 			errno = 0;
 			return 1;
 		case TOKEN_CHAR:
-			if (pattern.ch != text[i]) {
+			if (
+				( (modifiers & MOD_I) && tolower(pattern.ch) != tolower(text[i])) ||
+				(!(modifiers & MOD_I) &&         pattern.ch  !=         text[i] )
+			) {
 				errno = EINVAL;
 				return 0;
 			}
@@ -595,18 +598,21 @@ static size_t matchone(re_Token pattern, const char* text, size_t i)
 	/* should never reach */
 }
 
-static size_t matchoneclc(ClassChar pattern, const char* text, size_t i)
+static size_t matchoneclc(ClassChar pattern, const char* text, size_t i, uint_fast8_t modifiers)
 {
 	/* this function always returns 1 */
 	switch (pattern.type) {
 		case CCL_METABSL:
 			errno = 0;
-			metabsls[pattern.meta].validator(text, i);
+			metabsls[pattern.meta].validator(text, i, modifiers);
 			if (errno)
 				return 0;
 			return 1;
 		case CCL_CHARRANGE:
-			if (text[i] < pattern.first || text[i] > pattern.last) {
+			if (
+				( (modifiers & MOD_I) && (tolower(text[i]) < tolower(pattern.first) || tolower(text[i]) > tolower(pattern.last))) ||
+				(!(modifiers & MOD_I) && (        text[i]  <         pattern.first  ||         text[i]  >         pattern.last ))
+			) {
 				errno = EINVAL;
 				return 0;
 			}
@@ -619,56 +625,63 @@ static size_t matchoneclc(ClassChar pattern, const char* text, size_t i)
 	/* should never reach */
 }
 
-size_t matchwhitespace(const char* text, size_t i)
+size_t matchwhitespace(const char* text, size_t i, uint_fast8_t modifiers)
 {
+	UNUSED(modifiers);
 	if (!isspace(text[i])) {
 		errno = EINVAL;
 		return 0;
 	}
 	return 1;
 }
-size_t matchnotwhitespace(const char* text, size_t i)
+size_t matchnotwhitespace(const char* text, size_t i, uint_fast8_t modifiers)
 {
+	UNUSED(modifiers);
 	if (isspace(text[i])) {
 		errno = EINVAL;
 		return 0;
 	}
 	return 1;
 }
-size_t matchdigit(const char* text, size_t i)
+size_t matchdigit(const char* text, size_t i, uint_fast8_t modifiers)
 {
+	UNUSED(modifiers);
 	if (!isdigit(text[i])) {
 		errno = EINVAL;
 		return 0;
 	}
 	return 1;
 }
-size_t matchnotdigit(const char* text, size_t i)
+size_t matchnotdigit(const char* text, size_t i, uint_fast8_t modifiers)
 {
+	UNUSED(modifiers);
 	if (isdigit(text[i])) {
 		errno = EINVAL;
 		return 0;
 	}
 	return 1;
 }
-size_t matchwordchar(const char* text, size_t i)
+size_t matchwordchar(const char* text, size_t i, uint_fast8_t modifiers)
 {
+	UNUSED(modifiers);
 	if (!iswordchar(text[i])) {
 		errno = EINVAL;
 		return 0;
 	}
 	return 1;
 }
-size_t matchnotwordchar(const char* text, size_t i)
+size_t matchnotwordchar(const char* text, size_t i, uint_fast8_t modifiers)
 {
+	UNUSED(modifiers);
 	if (iswordchar(text[i])) {
 		errno = EINVAL;
 		return 0;
 	}
 	return 1;
 }
-size_t matchnewline(const char* text, size_t i)
+size_t matchnewline(const char* text, size_t i, uint_fast8_t modifiers)
 {
+	UNUSED(modifiers);
 	if (text[i] == '\r' && text[i+1] == '\n')
 		return 2;
 	else if (text[i] == '\n')
@@ -676,8 +689,9 @@ size_t matchnewline(const char* text, size_t i)
 	errno = EINVAL;
 	return 0;
 }
-size_t matchwordboundary(const char* text, size_t i)
+size_t matchwordboundary(const char* text, size_t i, uint_fast8_t modifiers)
 {
+	UNUSED(modifiers);
 	if (
 		(i > 0 && iswordchar(text[i-1]) != !iswordchar(text[i])) ||
 		(i == 0 && !iswordchar(text[0]))
@@ -687,8 +701,9 @@ size_t matchwordboundary(const char* text, size_t i)
 	}
 	return 0;
 }
-size_t matchnotwordboundary(const char* text, size_t i)
+size_t matchnotwordboundary(const char* text, size_t i, uint_fast8_t modifiers)
 {
+	UNUSED(modifiers);
 	if (
 		(i > 0 && iswordchar(text[i-1]) == !iswordchar(text[i])) ||
 		(i == 0 && iswordchar(text[0]))
@@ -699,26 +714,28 @@ size_t matchnotwordboundary(const char* text, size_t i)
 	return 0;
 }
 
-size_t matchstart(const char* text, size_t i)
+size_t matchstart(const char* text, size_t i, uint_fast8_t modifiers)
 {
 	UNUSED(text);
+	UNUSED(modifiers);
 	if (i) {
 		errno = EINVAL;
 		return 0;
 	}
 	return 0;
 }
-size_t matchend(const char* text, size_t i)
+size_t matchend(const char* text, size_t i, uint_fast8_t modifiers)
 {
+	UNUSED(modifiers);
 	if (text[i] != '\0') {
 		errno = EINVAL;
 		return 0;
 	}
 	return 0;
 }
-size_t matchany(const char* text, size_t i)
+size_t matchany(const char* text, size_t i, uint_fast8_t modifiers)
 {
-	if (text[i] == '\0') {
+	if (text[i] == '\0' || (!(modifiers & MOD_S) && text[i] == '\n')) {
 		errno = EINVAL;
 		return 0;
 	}

@@ -67,7 +67,7 @@ while repeats >= 0:
 		ret = call([prog, "\"%s\"" % pattern, "\"%s\"" % example])
 		if ret != 0:
 			escaped = repr(example) # escapes special chars for better printing
-			print("		 FAIL : matches %s unexpectedly [%s]." % (escaped, ", ".join([("0x%02x" % ord(e)) for e in example]) ))
+			print("FAIL: matches %s unexpectedly [%s]." % (escaped, ", ".join([("0x%02x" % ord(e)) for e in example]) ))
 			nfails += 1
 
 	except:

@@ -130,10 +130,9 @@ static void printoneclc(ClassChar pattern);
 
 void re_compile(Regex* compiled, const char* pattern)
 {
-	/* set its character class buffer index to 0 */
 	compiled->ccli = 0;
-	size_t pi = 0;	/* index into pattern  */
-	size_t ri = 0;	/* index into compiled */
+	size_t pi = 0; /* index into pattern  */
+	size_t ri = 0; /* index into compiled */
 
 	while (pattern[pi] && ri < MAXTOKENS) {
 		errno = 0;
@@ -201,11 +200,9 @@ static size_t compileone(re_Token* compiled, const char* pattern, ClassChar cclb
 				}
 				i += compileoneclc(&cclbuf[*ccli], pattern+i);
 				if (errno)
-					/* compileoneclc failed */
 					return 0;
 				i += compilerange(&cclbuf[*ccli], pattern+i);
 				if (errno)
-					/* compilerange failed */
 					return 0;
 				++*ccli;
 			}
@@ -219,7 +216,6 @@ static size_t compileone(re_Token* compiled, const char* pattern, ClassChar cclb
 				errno = ENOBUFS;
 				return 0;
 			}
-			/* close the character class */
 			cclbuf[(*ccli)++].type = CCL_NULLTERM;
 			return i+1;
 		case '\0':
@@ -258,12 +254,6 @@ static size_t compileoneclc(ClassChar* compiled, const char* pattern)
 				if (pattern[1] == metabsls[i].pattern) {
 					compiled->type = CCL_METABSL;
 					compiled->meta = i;
-					if (pattern[2] == '-') {
-						/* a range from a metabsl to something else (e.g. [\w-b]); error */
-						/* javascript just treats this as a literal, but python throws an error; this follows python */
-						errno = EINVAL;
-						return 0;
-					}
 					return 2;
 				}
 			}
@@ -308,7 +298,6 @@ static size_t compilerange(ClassChar* compiled, const char* pattern)
 			for (size_t i = 0; i < sizeof(metabsls)/sizeof(metabsls[0]); ++i) {
 				if (pattern[2] == metabsls[i].pattern) {
 					/* a range from a character to a metabsl; error (e.g. [b-\w] )*/
-					/* javascript treats this as literal, but we are following python and so we cause an error */
 					errno = EINVAL;
 					return 0;
 				}
@@ -317,7 +306,7 @@ static size_t compilerange(ClassChar* compiled, const char* pattern)
 			compiled->last = pattern[2];
 			return 4;
 		case ']':
-			/* ccl ends on dash; (e.g. [asdf-]); treat as literal */
+			/* ccl ends on dash; (e.g. [asdf-]); treat dash as literal */
 			compiled->last = compiled->first;
 			return 0;
 		case '\0':
@@ -334,7 +323,6 @@ static size_t compilerange(ClassChar* compiled, const char* pattern)
 
 static size_t compilequantifier(re_Token* compiled, const char* pattern)
 {
-	/* defaults */
 	compiled->quantifiermin = 1;
 	compiled->quantifiermax = 1;
 
@@ -361,7 +349,7 @@ static size_t compilequantifier(re_Token* compiled, const char* pattern)
 			compiled->quantifiermin *= 10;
 			compiled->quantifiermin += pattern[i] - '0';
 		} else if (pattern[i] == ',') {
-			/* start entering the max, but first if there is no max set it to SIZE_MAX (infinity) */
+			/* start entering the max, but first if there is no max set it to UINT_FAST8_MAX (infinity) */
 			++i;
 			if (pattern[i] == '}') {
 				compiled->quantifiermax = UINT_FAST8_MAX;
@@ -405,11 +393,9 @@ static size_t compilegreedy(re_Token* compiled, const char* pattern)
 {
 	switch (pattern[0]) {
 		case '?':
-			/* ? on end of quantifier makes it not greedy */
 			compiled->greedy = false;
 			return 1;
 		default:
-			/* all quantifiers are greedy by default */
 			compiled->greedy = true;
 			return 0;
 	}
@@ -419,11 +405,9 @@ static size_t compileatomic(re_Token* compiled, const char* pattern)
 {
 	switch (pattern[0]) {
 		case '+':
-			/* + on end of quantifier makes it atomic */
 			compiled->atomic = true;
 			return 1;
 		default:
-			/* all quantifiers are non atomic by default */
 			compiled->atomic = false;
 			return 0;
 	}
@@ -470,8 +454,7 @@ size_t re_rmatchg(Regex pattern, const char* text)
 		i += re_rmatch(pattern, text+i, &length);
 		if (errno)
 			return c;
-		else
-			++c;
+		++c;
 		i += length;
 	}
 	return c;
@@ -562,35 +545,22 @@ static size_t matchone(re_Token pattern, const char* text, size_t i)
 		case TOKEN_METABSL:
 			errno = 0;
 			chars = metabsls[pattern.meta].validator(text, i);
-			if (!errno) {
-				/* validator succceded and text[i] matches */
-				return chars;
-			} else {
-				/* validator failed */
-				errno = EINVAL;
+			if (errno)
 				return 0;
-			}
+			return chars;
 		case TOKEN_METACHAR:
 			errno = 0;
 			chars = metachars[pattern.meta].validator(text, i);
-			if (!errno) {
-				/* validator succceded and text[i] matches */
-				return chars;
-			} else {
-				/* validator failed */
-				errno = EINVAL;
+			if (errno)
 				return 0;
-			}
+			return chars;
 		case TOKEN_CHARCLASS:
 			ccli = 0;
 			while (pattern.ccl[ccli].type != CCL_NULLTERM) {
 				errno = 0;
 				i += matchoneclc(pattern.ccl[ccli], text, i);
-				if (!errno) {
-					/* matchoneclc succeeded */
+				if (!errno)
 					return 1;
-				}
-				/* this class character failed; continue looking */
 				++ccli;
 			}
 			/* all the chars in the class failed; matching failed */
@@ -606,20 +576,17 @@ static size_t matchone(re_Token pattern, const char* text, size_t i)
 					errno = EINVAL;
 					return 0;
 				}
-				/* this class character failed; continue looking */
 				++ccli;
 			}
 			/* all the chars in the class failed; matching succeeded */
 			errno = 0;
 			return 1;
 		case TOKEN_CHAR:
-			if (pattern.ch == text[i]) {
-				/* literal char is the same */
-				return 1;
-			} else {
+			if (pattern.ch != text[i]) {
 				errno = EINVAL;
 				return 0;
 			}
+			return 1;
 		default:
 			/* unknown re_Token type: should never happen */
 			errno = EINVAL;
@@ -635,22 +602,15 @@ static size_t matchoneclc(ClassChar pattern, const char* text, size_t i)
 		case CCL_METABSL:
 			errno = 0;
 			metabsls[pattern.meta].validator(text, i);
-			if (!errno) {
-				/* validator succeeded */
-				return 1;
-			} else {
-				/* validator failed */
-				errno = EINVAL;
+			if (errno)
 				return 0;
-			}
+			return 1;
 		case CCL_CHARRANGE:
-			if (text[i] >= pattern.first && text[i] <= pattern.last) {
-				/* char is in range */
-				return 1;
-			} else {
+			if (text[i] < pattern.first || text[i] > pattern.last) {
 				errno = EINVAL;
 				return 0;
 			}
+			return 1;
 		default:
 			/* should never happen */
 			errno = EINVAL;
@@ -661,117 +621,104 @@ static size_t matchoneclc(ClassChar pattern, const char* text, size_t i)
 
 size_t matchwhitespace(const char* text, size_t i)
 {
-	if (isspace(text[i])) {
-		return 1;
-	} else {
+	if (!isspace(text[i])) {
 		errno = EINVAL;
 		return 0;
 	}
+	return 1;
 }
 size_t matchnotwhitespace(const char* text, size_t i)
 {
-	if (!isspace(text[i])) {
-		return 1;
-	} else {
+	if (isspace(text[i])) {
 		errno = EINVAL;
 		return 0;
 	}
+	return 1;
 }
 size_t matchdigit(const char* text, size_t i)
 {
-	if (isdigit(text[i])) {
-		return 1;
-	} else {
+	if (!isdigit(text[i])) {
 		errno = EINVAL;
 		return 0;
 	}
+	return 1;
 }
 size_t matchnotdigit(const char* text, size_t i)
 {
-	if (!isdigit(text[i])) {
-		return 1;
-	} else {
+	if (isdigit(text[i])) {
 		errno = EINVAL;
 		return 0;
 	}
+	return 1;
 }
 size_t matchwordchar(const char* text, size_t i)
 {
-	if (iswordchar(text[i])) {
-		return 1;
-	} else {
+	if (!iswordchar(text[i])) {
 		errno = EINVAL;
 		return 0;
 	}
+	return 1;
 }
 size_t matchnotwordchar(const char* text, size_t i)
 {
-	if (!iswordchar(text[i])) {
-		return 1;
-	} else {
+	if (iswordchar(text[i])) {
 		errno = EINVAL;
 		return 0;
 	}
+	return 1;
 }
 size_t matchnewline(const char* text, size_t i)
 {
-	if (text[i] == '\r' && text[i+1] == '\n') {
+	if (text[i] == '\r' && text[i+1] == '\n')
 		return 2;
-	} else if (text[i] == '\n') {
+	else if (text[i] == '\n')
 		return 1;
-	} else {
-		errno = EINVAL;
-		return 0;
-	}
+	errno = EINVAL;
+	return 0;
 }
 size_t matchwordboundary(const char* text, size_t i)
-{
-	if (
-		(i > 0 && iswordchar(text[i-1]) != !iswordchar(text[i])) ||
-		(i == 0 && iswordchar(text[0]))
-	) {
-		/* word boundary is zero-width */
-		return 0;
-	} else {
-		errno = EINVAL;
-		return 0;
-	}
-}
-size_t matchnotwordboundary(const char* text, size_t i)
 {
 	if (
 		(i > 0 && iswordchar(text[i-1]) == !iswordchar(text[i])) ||
 		(i == 0 && !iswordchar(text[0]))
 	) {
-		return 0;
-	} else {
 		errno = EINVAL;
 		return 0;
 	}
+	return 0;
+}
+size_t matchnotwordboundary(const char* text, size_t i)
+{
+	if (
+		(i > 0 && iswordchar(text[i-1]) != !iswordchar(text[i])) ||
+		(i == 0 && iswordchar(text[0]))
+	) {
+		errno = EINVAL;
+		return 0;
+	}
+	return 0;
 }
 
 size_t matchstart(const char* text, size_t i)
 {
 	UNUSED(text);
-	if (i == 0) {
-		return 0;
-	} else {
+	if (i) {
 		errno = EINVAL;
 		return 0;
 	}
+	return 0;
 }
 size_t matchend(const char* text, size_t i)
 {
-	if (text[i] == '\0') {
-		return 0;
-	} else {
+	if (text[i] != '\0') {
 		errno = EINVAL;
 		return 0;
 	}
+	return 0;
 }
 size_t matchany(const char* text, size_t i)
 {
-	if (!text[i]) {
+	if (text[i] == '\0') {
 		errno = EINVAL;
 		return 0;
 	}

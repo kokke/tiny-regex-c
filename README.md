@@ -27,13 +27,12 @@ The main design goal of this library is to be small, correct, self contained and
 - Groups are reworked to act the same way but provide more features. Now, a group consists of the following items:
 	- An open bracket.
 	- Nothing if the group is capturing, and ? if it isn't.
-	- A list of modifiers in any order, with each one being preceeded by a dash (minus sign) to disable it.
-	- A less than sign if the group matches backwards.
-	- An equals sign if the group is a lookaround (doesn't 'eat' any characters); an exclamation mark if the group is inverted, and nothing or a colon otherwise.
+	- A list of modifiers in any order
+	- An equals sign if the group is a lookaround (doesn't 'eat' any characters); an exclamation mark if the group is inverted; a colon if the group has any characters between the open bracket and the colon, and nothing otherwise.
 	- A regex.
 	- A close bracket.
 
-	Note that a capturing inverted group (e.g. (!regex) ) will always capture nothing.
+	Note that a capturing inverted group (e.g. (!:regex) ) will always capture nothing.
 - For testing, [exrex](https://github.com/asciimoo/exrex) is used to randomly generate test-cases from regex patterns, which are fed into the regex code for verification. Try `make test` to generate a few thousand tests cases yourself.
 - Small code and binary size: <1000 SLOC, ~5kb binary for x86. Statically #define'd memory usage / allocation.
 - Compiled for x86 using GCC 4.7.4 and optimizing for size, the binary takes up ~5kb code space and allocates ~0.2kb RAM:
@@ -49,16 +48,14 @@ The main design goal of this library is to be small, correct, self contained and
 This is the public / exported API:
 ```C
 /* re_compile: compile regex string pattern to a Regex */
-void re_compile(Regex* compiled, const char* pattern);
+size_t re_compile(Regex* compiled, const char* pattern);
 
 /* re_match: returns index of first match of pattern in text */
 /* stores the length of the match in length if it is not NULL */
-size_t re_rmatch(Regex pattern, const char* text, size_t* length);
-size_t re_smatch(const char* pattern, const char* text, size_t* length);
+size_t re_match(Regex pattern, const char* text, size_t* length);
 
 /* re_matchg: returns number of matches of pattern in text */
-size_t re_rmatchg(Regex pattern, const char* text);
-size_t re_smatchg(const char* pattern, const char* text);
+size_t re_matchg(Regex pattern, const char* text);
 
 /* re_print: prints a regex to stdout */
 void re_print(Regex pattern);
@@ -67,26 +64,28 @@ void re_print(Regex pattern);
 ## Supported regex-operators
 The following features / regex-operators are supported by this library.
 
-  -  `.`         Dot, matches any character
-  -  `^`         Start anchor, matches beginning of string
-  -  `$`         End anchor, matches end of string
-  -  `*`         Asterisk, match zero or more (greedy)
-  -  `+`         Plus, match one or more (greedy)
-  -  `?`         Question, match zero or one (greedy)
-  -  `?`         Question, make quantifier non-greedy
-  -  `+`         Plus, make quantifier atomic
-  -  `[abc]`     Character class, match if one of {'a', 'b', 'c'}
-  -  `[^abc]`   Inverted class, match if NOT one of {'a', 'b', 'c'}
-  -  `[a-zA-Z]` Character ranges, the character set of the ranges { a-z | A-Z }
-  -  `\s`       Whitespace, \t \f \r \n \v and spaces
-  -  `\S`       Non-whitespace
-  -  `\d`       Digits, [0-9]
-  -  `\D`       Non-digits
-  -  `\w`       Alphanumeric, [a-zA-Z0-9_]
-  -  `\W`       Non-alphanumeric
-  -  `\R`       Any newline (\r\n or \n)
-  -  `\b`       A word boundary (where one side is \w and the other is \W)
-  -  `\B`       Non-word boundary
+ - `.`         Dot, matches any character
+ - `^`         Start anchor, matches beginning of string
+ - `$`         End anchor, matches end of string
+ - `*`         Asterisk, match zero or more (greedy)
+ - `+`         Plus, match one or more (greedy)
+ - `?`         Question, match zero or one (greedy)
+ - `?`         Question, make quantifier non-greedy
+ - `+`         Plus, make quantifier atomic
+ - `[abc]`     Character class, match if one of {'a', 'b', 'c'}
+ - `[^abc]`   Inverted class, match if NOT one of {'a', 'b', 'c'}
+ - `[a-zA-Z]` Character ranges, the character set of the ranges { a-z | A-Z }
+ - `\s`       Whitespace, \t \f \r \n \v and spaces
+ - `\S`       Non-whitespace
+ - `\d`       Digits, [0-9]
+ - `\D`       Non-digits
+ - `\w`       Alphanumeric, [a-zA-Z0-9_]
+ - `\W`       Non-alphanumeric
+ - `\R`       Any newline (\r\n or \n)
+ - `\b`       A word boundary (where one side is \w and the other is \W)
+ - `\B`       Non-word boundary
+ - `i`        case Insensitive modifier
+ - `s`        Single line modifier (where a dot matches newlines too)
 
 ## Usage
 Compile a regex from ASCII-string (char-array) to a custom pattern structure using `re_compile()`.
@@ -105,24 +104,26 @@ const char* string_to_search = "ahem.. 'hello world !' ..";
 
 Regex pattern;
 
-/* Compile a simple regular expression using character classes, meta-char and greedy + non-greedy quantifiers: */
+/* Compile a simple regular expression using character classes, meta-char and quantifiers: */
 re_compile(&pattern, "[Hh]ello [Ww]orld\\s*[!]?");
 
 /* Check if the regex matches the text: */
 errno = 0;
-size_t match_idx = re_rmatch(pattern, string_to_search);
+size_t length;
+size_t match_idx = re_match(pattern, string_to_search, &length);
 if (!errno)
-	printf("match at idx %d.\n", match_idx);
+	printf("Match at index %zu with length %zu.\n", match_idx, length);
 ```
 
-For more usage examples I encourage you to look at the code in the `tests`-folder.
+For more usage examples I encourage you to look at the code in the `tests`-folder, as well as `example.c` for a simple `grep` implementation.
 
 ## TODO
-- Tests that include atomics, word boundaries, \R and modifiers
-- Implement | operator
-- Implement groups and captures
-- Add file sizes for other architectures in README.md
-- Add `tests/test_perf.c` for performance and time measurements.
+- More tests that include atomics, word boundaries, \R and modifiers.
+- Implement captures.
+- Implement lookarounds and inverted groups.
+- Implement branches (| operator).
+- Add file sizes for other architectures in README.md.
+- Add `tests/speed.c` for performance and time measurements.
 
 ## License
 All material in this repository is in the public domain.

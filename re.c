@@ -34,28 +34,59 @@ static int iswordchar(int c)
 #define UNUSED(variable) (void)(variable)
 
 /*
- * DEFINITIONS AND DECLARATIONS
+ * PRIVATE FUNCTION DECLARATIONS
  */
 
-static size_t matchwhitespace     (const char* text, size_t i, uint_fast8_t modifiers);
-static size_t matchnotwhitespace  (const char* text, size_t i, uint_fast8_t modifiers);
-static size_t matchdigit          (const char* text, size_t i, uint_fast8_t modifiers);
-static size_t matchnotdigit       (const char* text, size_t i, uint_fast8_t modifiers);
-static size_t matchwordchar       (const char* text, size_t i, uint_fast8_t modifiers);
-static size_t matchnotwordchar    (const char* text, size_t i, uint_fast8_t modifiers);
-static size_t matchnewline        (const char* text, size_t i, uint_fast8_t modifiers);
-static size_t matchwordboundary   (const char* text, size_t i, uint_fast8_t modifiers);
-static size_t matchnotwordboundary(const char* text, size_t i, uint_fast8_t modifiers);
+/* compileone: compiles one regex token, returns number of chars eaten */
+static size_t compileone(re_Token* compiled, const char* pattern, ClassChar cclbuf[CCLBUFLEN], size_t* ccli);
+/* compileoneclc: compiles one class character, returns number of chars eaten */
+static size_t compileoneclc(ClassChar* compiled, const char* pattern);
+/* compilerange: compiles a range, returns number of chars eaten */
+static size_t compilerange(ClassChar* compiled, const char* pattern);
+/* compilequantifier: compiles a quantifier, returns number of chars eaten */
+static size_t compilequantifier(re_Token* compiled, const char* pattern);
+/* compilegreedy: sets whether the quantifier is greedy, returns number of chars eaten */
+static size_t compilegreedy(re_Token* compiled, const char* pattern);
+/* compileatomic: sets whether the quantifier is atomic, returns number of chars eaten */
+static size_t compileatomic(re_Token* compiled, const char* pattern);
 
-static size_t matchstart          (const char* text, size_t i, uint_fast8_t modifiers);
-static size_t matchend            (const char* text, size_t i, uint_fast8_t modifiers);
-static size_t matchany            (const char* text, size_t i, uint_fast8_t modifiers);
+/* matchpattern: matches one pattern on a string, returns number of chars eaten */
+static size_t matchpattern(re_Token* pattern, const char* text, size_t i, uint_fast8_t* modifiers);
+/* matchcount: matches one regex token including quantifiers and sets count for number of quantifiers, returns number of characters eaten */
+static size_t matchcount(re_Token pattern, uint_fast8_t* count, const char* text, size_t i, uint_fast8_t* modifiers);
+/* matchone: matches one regex token ignoring quantifiers, returns number of characters eaten */
+static size_t matchone(re_Token pattern, const char* text, size_t i, uint_fast8_t* modifiers);
+/* matchoneclc: matches one class character, returns number of chars eaten */
+static size_t matchoneclc(ClassChar pattern, const char* text, size_t i, uint_fast8_t* modifiers);
+/* more matching functions */
+static size_t matchwhitespace     (const char* text, size_t i, uint_fast8_t* modifiers);
+static size_t matchnotwhitespace  (const char* text, size_t i, uint_fast8_t* modifiers);
+static size_t matchdigit          (const char* text, size_t i, uint_fast8_t* modifiers);
+static size_t matchnotdigit       (const char* text, size_t i, uint_fast8_t* modifiers);
+static size_t matchwordchar       (const char* text, size_t i, uint_fast8_t* modifiers);
+static size_t matchnotwordchar    (const char* text, size_t i, uint_fast8_t* modifiers);
+static size_t matchnewline        (const char* text, size_t i, uint_fast8_t* modifiers);
+static size_t matchwordboundary   (const char* text, size_t i, uint_fast8_t* modifiers);
+static size_t matchnotwordboundary(const char* text, size_t i, uint_fast8_t* modifiers);
+
+static size_t matchstart          (const char* text, size_t i, uint_fast8_t* modifiers);
+static size_t matchend            (const char* text, size_t i, uint_fast8_t* modifiers);
+static size_t matchany            (const char* text, size_t i, uint_fast8_t* modifiers);
+
+/* printone: prints one regex token */
+static void printone(re_Token pattern);
+/* printoneclc: prints one class character */
+static void printoneclc(ClassChar pattern);
+
+/*
+ * GLOBAL CONFIGURATION
+ */
 
 /* the array of all metabsls (sequences that begin with a backslash) */
 const struct
 {
 	char pattern;
-	size_t (*validator)(const char*, size_t, uint_fast8_t);
+	size_t (*validator)(const char*, size_t, uint_fast8_t*);
 }
 metabsls[] =
 {
@@ -74,7 +105,7 @@ metabsls[] =
 const struct
 {
 	char pattern;
-	size_t (*validator)(const char*, size_t, uint_fast8_t);
+	size_t (*validator)(const char*, size_t, uint_fast8_t*);
 }
 metachars[] =
 {
@@ -97,32 +128,31 @@ quantifiers[] =
 	{'+', 1, UINT_FAST8_MAX}
 };
 
-/* compileone: compiles one regex token, returns number of chars eaten */
-static size_t compileone(re_Token* compiled, const char* pattern, ClassChar cclbuf[CCLBUFLEN], size_t* ccli);
-/* compileoneclc: compiles one class character, returns number of chars eaten */
-static size_t compileoneclc(ClassChar* compiled, const char* pattern);
-/* compilerange: compiles a range, returns number of chars eaten */
-static size_t compilerange(ClassChar* compiled, const char* pattern);
-/* compilequantifier: compiles a quantifier, returns number of chars eaten */
-static size_t compilequantifier(re_Token* compiled, const char* pattern);
-/* compilegreedy: sets whether the quantifier is greedy, returns number of chars eaten */
-static size_t compilegreedy(re_Token* compiled, const char* pattern);
-/* compileatomic: sets whether the quantifier is atomic, returns number of chars eaten */
-static size_t compileatomic(re_Token* compiled, const char* pattern);
+#define MOD_I 0b00000001
+#define MOD_S 0b00000010
+#define MOD_B 0b00000100
 
-/* matchpattern: matches one pattern on a string, returns number of chars eaten */
-static size_t matchpattern(re_Token* pattern, const char* text, size_t i, uint_fast8_t modifiers);
-/* matchcount: matches one regex token including quantifiers and sets count for number of quantifiers, returns number of characters eaten */
-static size_t matchcount(re_Token pattern, uint_fast8_t* count, const char* text, size_t i, uint_fast8_t modifiers);
-/* matchone: matches one regex token ignoring quantifiers, returns number of characters eaten */
-static size_t matchone(re_Token pattern, const char* text, size_t i, uint_fast8_t modifiers);
-/* matchoneclc: matches one class character, returns number of chars eaten */
-static size_t matchoneclc(ClassChar pattern, const char* text, size_t i, uint_fast8_t modifiers);
+const struct
+{
+	char pattern;
+	uint_fast8_t modifier;
+}
+modifierchars[] =
+{
+	{'i', MOD_I}, /* case Insensitive */
+	{'s', MOD_S}, /* Single line (DOTALL) */
+	{'<', MOD_B}  /* backwards */
+};
 
-/* printone: prints one regex token */
-static void printone(re_Token pattern);
-/* printoneclc: prints one class character */
-static void printoneclc(ClassChar pattern);
+/*
+ * GLOBAL VARIABLES
+ */
+
+re_Token* groupstack[MAXGROUPS] = {NULL};
+size_t groupstacki = 0;
+
+uint_fast8_t modifierstack[MAXGROUPS] = {0};
+size_t modifierstacki = 0;
 
 /*
  * COMPILATION FUNCTIONS
@@ -130,11 +160,12 @@ static void printoneclc(ClassChar pattern);
 
 void re_compile(Regex* compiled, const char* pattern)
 {
+	groupstacki = 0;
 	compiled->ccli = 0;
 	size_t pi = 0; /* index into pattern  */
 	size_t ri = 0; /* index into compiled */
 
-	while (pattern[pi] && ri < MAXTOKENS) {
+	while (pattern[pi] != '\0' && ri < MAXTOKENS) {
 		errno = 0;
 		pi += compileone(&compiled->tokens[ri], &pattern[pi], compiled->cclbuf, &compiled->ccli);
 		if (errno)
@@ -157,11 +188,15 @@ void re_compile(Regex* compiled, const char* pattern)
 		return;
 	}
 	/* indicate the end of the regex */
-	compiled->tokens[ri].type = TOKEN_NULLTERM;
+	compiled->tokens[ri].type = TOKEN_END;
+
+	if (groupstacki)
+		errno = EINVAL;
 }
 
 static size_t compileone(re_Token* compiled, const char* pattern, ClassChar cclbuf[CCLBUFLEN], size_t* ccli)
 {
+	size_t i;
 	switch (pattern[0]) {
 		case '\\':
 			if (!pattern[1]) {
@@ -186,7 +221,7 @@ static size_t compileone(re_Token* compiled, const char* pattern, ClassChar cclb
 			/* character class */
 			compiled->type = TOKEN_CHARCLASS;
 			compiled->ccl = &cclbuf[*ccli];
-			size_t i = 1;
+			i = 1;
 			if (pattern[i] == '^') {
 				++i;
 				compiled->type = TOKEN_INVCHARCLASS;
@@ -216,11 +251,72 @@ static size_t compileone(re_Token* compiled, const char* pattern, ClassChar cclb
 				errno = ENOBUFS;
 				return 0;
 			}
-			cclbuf[(*ccli)++].type = CCL_NULLTERM;
+			cclbuf[(*ccli)++].type = CCL_END;
 			return i+1;
+		case '(':
+			/* group */
+			compiled->type = TOKEN_GROUP;
+			i = 1;
+
+			compiled->capturing = true;
+			if (pattern[i] == '?') {
+				compiled->capturing = false;
+				++i;
+			}
+
+			compiled->modifiers = 0;
+			if (groupstacki)
+				compiled->modifiers = groupstack[groupstacki-1]->modifiers;
+			for (;;) {
+				for (size_t j = 0; j < sizeof(modifierchars)/sizeof(modifierchars[0]); ++j) {
+					if (pattern[i] == modifierchars[j].pattern) {
+						compiled->modifiers |= modifierchars[j].modifier;
+						++i;
+						goto modifierfound;
+					}
+				}
+				if (pattern[i] == '-') {
+					++i;
+					for (size_t j = 0; j < sizeof(modifierchars)/sizeof(modifierchars[0]); ++j) {
+						if (pattern[i] == modifierchars[j].pattern) {
+							compiled->modifiers &= ~modifierchars[j].modifier;
+							++i;
+							goto modifierfound;
+						}
+					}
+					--i;
+				}
+				break;
+modifierfound:
+				continue;
+			}
+
+			compiled->grouptype = GROUP_NORMAL;
+			if (pattern[i] == '=') {
+				compiled->grouptype = GROUP_LOOKAROUND;
+				++i;
+			} else if (pattern[i] == '!') {
+				compiled->grouptype = GROUP_INVERTED;
+				++i;
+			} else if (pattern[i] == ':') {
+				++i;
+			}
+
+			if (groupstacki >= MAXGROUPS) {
+				errno = ENOBUFS;
+				return 0;
+			}
+			groupstack[groupstacki] = compiled;
+			++groupstacki;
+			return i;
+		case ')':
+			/* group end */
+			compiled->type = TOKEN_GROUPEND;
+			--groupstacki;
+			return 1;
 		case '\0':
-			/* shouldn't happen, but handle anyway */
-			compiled->type = TOKEN_NULLTERM;
+			/* shouldn't happen */
+			errno = EINVAL;
 			return 0;
 		default:
 			/* is a metachar */
@@ -237,7 +333,7 @@ static size_t compileone(re_Token* compiled, const char* pattern, ClassChar cclb
 			compiled->ch = pattern[0];
 			return 1;
 	}
-	/* should never reach */
+	/* UNREACHABLE */
 }
 
 static size_t compileoneclc(ClassChar* compiled, const char* pattern)
@@ -263,16 +359,16 @@ static size_t compileoneclc(ClassChar* compiled, const char* pattern)
 			return 2;
 		case '\0': /* FALLTHROUGH */
 		case ']':
-			/* shouldn't happen, but handle anyway */
-			compiled->type = CCL_NULLTERM;
-			return 1;
+			/* shouldn't happen */
+			errno = EINVAL;
+			return 0;
 		default:
 			/* literal char */
 			compiled->type = CCL_CHARRANGE;
 			compiled->first = pattern[0];
 			return 1;
 	}
-	/* should never reach */
+	/* UNREACHABLE */
 }
 
 static size_t compilerange(ClassChar* compiled, const char* pattern)
@@ -318,7 +414,7 @@ static size_t compilerange(ClassChar* compiled, const char* pattern)
 			compiled->last = pattern[1];
 			return 2;
 	}
-	/* should never reach */
+	/* UNREACHABLE */
 }
 
 static size_t compilequantifier(re_Token* compiled, const char* pattern)
@@ -417,11 +513,17 @@ static size_t compileatomic(re_Token* compiled, const char* pattern)
  * MATCHING FUNCTIONS
  */
 
-size_t re_rmatch(Regex pattern, const char* text, size_t* length, uint_fast8_t modifiers)
+size_t re_match(Regex pattern, const char* text, size_t* length)
 {
-	for (size_t i = 0; text[i]; ++i) {
+	for (size_t i = 0; i == 0 || text[i-1]; ++i) {
 		errno = 0;
-		const size_t lengthBuf = matchpattern(pattern.tokens, text, i, modifiers);
+		modifierstacki = 0;
+		uint_fast8_t modifiers = 0;
+		const size_t lengthBuf = matchpattern(pattern.tokens, text, i, &modifiers);
+		if (modifierstacki) {
+			errno = EINVAL;
+			return 0;
+		}
 		if (!errno) {
 			/* first successful match */
 			if (length)
@@ -429,29 +531,19 @@ size_t re_rmatch(Regex pattern, const char* text, size_t* length, uint_fast8_t m
 			return i;
 		}
 	}
-	/* no matches: errno is already set by matchpattern */
+	/* no matches */
+	errno = EINVAL;
 	return 0;
 }
 
-size_t re_smatch(const char* pattern, const char* text, size_t* length, uint_fast8_t modifiers)
-{
-	Regex regex;
-	errno = 0;
-	re_compile(&regex, pattern);
-	if (errno)
-		return 0;
-
-	return re_rmatch(regex, text, length, modifiers);
-}
-
-size_t re_rmatchg(Regex pattern, const char* text, uint_fast8_t modifiers)
+size_t re_matchg(Regex pattern, const char* text)
 {
 	size_t i = 0;
 	size_t c = 0;
 	while (text[i]) {
 		size_t length = 0;
 		errno = 0;
-		i += re_rmatch(pattern, text+i, &length, modifiers);
+		i += re_match(pattern, text+i, &length);
 		if (errno)
 			return c;
 		++c;
@@ -460,27 +552,13 @@ size_t re_rmatchg(Regex pattern, const char* text, uint_fast8_t modifiers)
 	return c;
 }
 
-size_t re_smatchg(const char* pattern, const char* text, uint_fast8_t modifiers)
-{
-	Regex regex;
-	errno = 0;
-	re_compile(&regex, pattern);
-	if (errno)
-		return 0;
-
-	return re_rmatchg(regex, text, modifiers);
-}
-
-static size_t matchpattern(re_Token* pattern, const char* text, size_t i, uint_fast8_t modifiers)
+static size_t matchpattern(re_Token* pattern, const char* text, size_t i, uint_fast8_t* modifiers)
 {
 	const size_t starti = i;
 
-	if (pattern[0].type == TOKEN_NULLTERM)
-		return 0;
-
 	/* consume as many tokens as you can iteratively, to avoid as much recursion as possible */
 	for (;;) {
-		if (pattern[0].type == TOKEN_NULLTERM)
+		if (pattern[0].type == TOKEN_END)
 			return 0;
 		if (pattern[0].quantifiermin != pattern[0].quantifiermax && !pattern[0].atomic)
 			break;
@@ -493,7 +571,7 @@ static size_t matchpattern(re_Token* pattern, const char* text, size_t i, uint_f
 
 	const size_t oldi = i;
 
-	/* all the tokens that can be iteratively consumed have been, now use recursion */
+	/* all the tokens that can be iteratively consumed have been, now recurse */
 	uint_fast8_t count = pattern[0].greedy ? pattern[0].quantifiermax : pattern[0].quantifiermin;
 	for (;;) {
 		i = oldi;
@@ -522,7 +600,7 @@ static size_t matchpattern(re_Token* pattern, const char* text, size_t i, uint_f
 	return i-starti;
 }
 
-static size_t matchcount(re_Token pattern, uint_fast8_t* count, const char* text, size_t i, uint_fast8_t modifiers)
+static size_t matchcount(re_Token pattern, uint_fast8_t* count, const char* text, size_t i, uint_fast8_t* modifiers)
 {
 	const size_t oldi = i;
 
@@ -537,11 +615,24 @@ static size_t matchcount(re_Token pattern, uint_fast8_t* count, const char* text
 	return i-oldi;
 }
 
-static size_t matchone(re_Token pattern, const char* text, size_t i, uint_fast8_t modifiers)
+static size_t matchone(re_Token pattern, const char* text, size_t i, uint_fast8_t* modifiers)
 {
 	size_t chars;
 	size_t ccli;
 	switch (pattern.type) {
+		case TOKEN_GROUP:
+			/* TODO capturing */
+			if (modifierstacki >= MAXGROUPS) {
+				errno = ENOBUFS;
+				return 0;
+			}
+			modifierstack[modifierstacki] =  *modifiers;
+			++modifierstacki;
+			*modifiers = pattern.modifiers;
+			return 0;
+		case TOKEN_GROUPEND:
+			*modifiers = modifierstack[--modifierstacki];
+			return 0;
 		case TOKEN_METABSL:
 			errno = 0;
 			chars = metabsls[pattern.meta].validator(text, i, modifiers);
@@ -556,7 +647,7 @@ static size_t matchone(re_Token pattern, const char* text, size_t i, uint_fast8_
 			return chars;
 		case TOKEN_CHARCLASS:
 			ccli = 0;
-			while (pattern.ccl[ccli].type != CCL_NULLTERM) {
+			while (pattern.ccl[ccli].type != CCL_END) {
 				errno = 0;
 				i += matchoneclc(pattern.ccl[ccli], text, i, modifiers);
 				if (!errno)
@@ -567,8 +658,12 @@ static size_t matchone(re_Token pattern, const char* text, size_t i, uint_fast8_
 			errno = EINVAL;
 			return 0;
 		case TOKEN_INVCHARCLASS:
+			if (!text[i]) {
+				errno = EINVAL;
+				return 0;
+			}
 			ccli = 0;
-			while (pattern.ccl[ccli].type != CCL_NULLTERM) {
+			while (pattern.ccl[ccli].type != CCL_END) {
 				errno = 0;
 				i += matchoneclc(pattern.ccl[ccli], text, i, modifiers);
 				if (!errno) {
@@ -583,8 +678,8 @@ static size_t matchone(re_Token pattern, const char* text, size_t i, uint_fast8_
 			return 1;
 		case TOKEN_CHAR:
 			if (
-				( (modifiers & MOD_I) && tolower(pattern.ch) != tolower(text[i])) ||
-				(!(modifiers & MOD_I) &&         pattern.ch  !=         text[i] )
+				( (*modifiers & MOD_I) && tolower(pattern.ch) != tolower(text[i])) ||
+				(!(*modifiers & MOD_I) &&         pattern.ch  !=         text[i] )
 			) {
 				errno = EINVAL;
 				return 0;
@@ -595,10 +690,10 @@ static size_t matchone(re_Token pattern, const char* text, size_t i, uint_fast8_
 			errno = EINVAL;
 			return 0;
 	}
-	/* should never reach */
+	/* UNREACHABLE */
 }
 
-static size_t matchoneclc(ClassChar pattern, const char* text, size_t i, uint_fast8_t modifiers)
+static size_t matchoneclc(ClassChar pattern, const char* text, size_t i, uint_fast8_t* modifiers)
 {
 	/* this function always returns 1 */
 	switch (pattern.type) {
@@ -610,8 +705,8 @@ static size_t matchoneclc(ClassChar pattern, const char* text, size_t i, uint_fa
 			return 1;
 		case CCL_CHARRANGE:
 			if (
-				( (modifiers & MOD_I) && (tolower(text[i]) < tolower(pattern.first) || tolower(text[i]) > tolower(pattern.last))) ||
-				(!(modifiers & MOD_I) && (        text[i]  <         pattern.first  ||         text[i]  >         pattern.last ))
+				( (*modifiers & MOD_I) && (tolower(text[i]) < tolower(pattern.first) || tolower(text[i]) > tolower(pattern.last))) ||
+				(!(*modifiers & MOD_I) && (        text[i]  <         pattern.first  ||         text[i]  >         pattern.last ))
 			) {
 				errno = EINVAL;
 				return 0;
@@ -622,10 +717,10 @@ static size_t matchoneclc(ClassChar pattern, const char* text, size_t i, uint_fa
 			errno = EINVAL;
 			return 0;
 	}
-	/* should never reach */
+	/* UNREACHABLE */
 }
 
-size_t matchwhitespace(const char* text, size_t i, uint_fast8_t modifiers)
+size_t matchwhitespace(const char* text, size_t i, uint_fast8_t* modifiers)
 {
 	UNUSED(modifiers);
 	if (!isspace(text[i])) {
@@ -634,16 +729,16 @@ size_t matchwhitespace(const char* text, size_t i, uint_fast8_t modifiers)
 	}
 	return 1;
 }
-size_t matchnotwhitespace(const char* text, size_t i, uint_fast8_t modifiers)
+size_t matchnotwhitespace(const char* text, size_t i, uint_fast8_t* modifiers)
 {
 	UNUSED(modifiers);
-	if (isspace(text[i])) {
+	if (!text[i] || isspace(text[i])) {
 		errno = EINVAL;
 		return 0;
 	}
 	return 1;
 }
-size_t matchdigit(const char* text, size_t i, uint_fast8_t modifiers)
+size_t matchdigit(const char* text, size_t i, uint_fast8_t* modifiers)
 {
 	UNUSED(modifiers);
 	if (!isdigit(text[i])) {
@@ -652,16 +747,16 @@ size_t matchdigit(const char* text, size_t i, uint_fast8_t modifiers)
 	}
 	return 1;
 }
-size_t matchnotdigit(const char* text, size_t i, uint_fast8_t modifiers)
+size_t matchnotdigit(const char* text, size_t i, uint_fast8_t* modifiers)
 {
 	UNUSED(modifiers);
-	if (isdigit(text[i])) {
+	if (!text[i] || isdigit(text[i])) {
 		errno = EINVAL;
 		return 0;
 	}
 	return 1;
 }
-size_t matchwordchar(const char* text, size_t i, uint_fast8_t modifiers)
+size_t matchwordchar(const char* text, size_t i, uint_fast8_t* modifiers)
 {
 	UNUSED(modifiers);
 	if (!iswordchar(text[i])) {
@@ -670,16 +765,16 @@ size_t matchwordchar(const char* text, size_t i, uint_fast8_t modifiers)
 	}
 	return 1;
 }
-size_t matchnotwordchar(const char* text, size_t i, uint_fast8_t modifiers)
+size_t matchnotwordchar(const char* text, size_t i, uint_fast8_t* modifiers)
 {
 	UNUSED(modifiers);
-	if (iswordchar(text[i])) {
+	if (!text[i] || iswordchar(text[i])) {
 		errno = EINVAL;
 		return 0;
 	}
 	return 1;
 }
-size_t matchnewline(const char* text, size_t i, uint_fast8_t modifiers)
+size_t matchnewline(const char* text, size_t i, uint_fast8_t* modifiers)
 {
 	UNUSED(modifiers);
 	if (text[i] == '\r' && text[i+1] == '\n')
@@ -689,7 +784,7 @@ size_t matchnewline(const char* text, size_t i, uint_fast8_t modifiers)
 	errno = EINVAL;
 	return 0;
 }
-size_t matchwordboundary(const char* text, size_t i, uint_fast8_t modifiers)
+size_t matchwordboundary(const char* text, size_t i, uint_fast8_t* modifiers)
 {
 	UNUSED(modifiers);
 	if (
@@ -701,7 +796,7 @@ size_t matchwordboundary(const char* text, size_t i, uint_fast8_t modifiers)
 	}
 	return 0;
 }
-size_t matchnotwordboundary(const char* text, size_t i, uint_fast8_t modifiers)
+size_t matchnotwordboundary(const char* text, size_t i, uint_fast8_t* modifiers)
 {
 	UNUSED(modifiers);
 	if (
@@ -714,7 +809,7 @@ size_t matchnotwordboundary(const char* text, size_t i, uint_fast8_t modifiers)
 	return 0;
 }
 
-size_t matchstart(const char* text, size_t i, uint_fast8_t modifiers)
+size_t matchstart(const char* text, size_t i, uint_fast8_t* modifiers)
 {
 	UNUSED(text);
 	UNUSED(modifiers);
@@ -724,7 +819,7 @@ size_t matchstart(const char* text, size_t i, uint_fast8_t modifiers)
 	}
 	return 0;
 }
-size_t matchend(const char* text, size_t i, uint_fast8_t modifiers)
+size_t matchend(const char* text, size_t i, uint_fast8_t* modifiers)
 {
 	UNUSED(modifiers);
 	if (text[i] != '\0') {
@@ -733,9 +828,9 @@ size_t matchend(const char* text, size_t i, uint_fast8_t modifiers)
 	}
 	return 0;
 }
-size_t matchany(const char* text, size_t i, uint_fast8_t modifiers)
+size_t matchany(const char* text, size_t i, uint_fast8_t* modifiers)
 {
-	if (text[i] == '\0' || (!(modifiers & MOD_S) && text[i] == '\n')) {
+	if (text[i] == '\0' || (!(*modifiers & MOD_S) && text[i] == '\n')) {
 		errno = EINVAL;
 		return 0;
 	}
@@ -748,7 +843,7 @@ size_t matchany(const char* text, size_t i, uint_fast8_t modifiers)
 
 void re_print(Regex pattern)
 {
-	for (size_t i = 0; pattern.tokens[i].type != TOKEN_NULLTERM; ++i) {
+	for (size_t i = 0; pattern.tokens[i].type != TOKEN_END; ++i) {
 		printone(pattern.tokens[i]);
 	}
 	printf("\n");
@@ -768,7 +863,7 @@ static void printone(re_Token pattern)
 			printf("[");
 			if (pattern.type == TOKEN_INVCHARCLASS)
 				printf("^");
-			for (size_t i = 0; pattern.ccl[i].type != CCL_NULLTERM; ++i)
+			for (size_t i = 0; pattern.ccl[i].type != CCL_END; ++i)
 				printoneclc(pattern.ccl[i]);
 			printf("]");
 			break;
@@ -776,8 +871,9 @@ static void printone(re_Token pattern)
 			printf("%c", pattern.ch);
 			break;
 		default:
-			/* shouldn't happen */
-			break;
+			/* unknown token type: shouldn't happen */
+			errno = EINVAL;
+			return;
 	}
 	for (size_t i = 0; i < sizeof(quantifiers)/sizeof(quantifiers[0]); ++i) {
 		if (pattern.quantifiermin == quantifiers[i].min && pattern.quantifiermax == quantifiers[i].max) {
@@ -816,6 +912,7 @@ static void printoneclc(ClassChar pattern)
 			break;
 		default:
 			/* shouldn't happen */
-			break;
+			errno = EINVAL;
+			return;
 	}
 }

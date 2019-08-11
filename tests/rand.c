@@ -112,7 +112,7 @@ int main()
 				continue;
 			}
 			errno = 0;
-			re_rmatch(regex, str, NULL);
+			re_match(regex, str, NULL);
 			if (errno) {
 				re_print(regex);
 				fprintf(stderr, "[%zu/%zu]: pattern '%s' didn't match '%s' as expected.\n", i+1, ntests, tests[i], str);
@@ -122,7 +122,7 @@ int main()
 		for (size_t j = 0; j < nfail; ++j) {
 			const char* str = genfail(pcreregex);
 			errno = 0;
-			re_rmatch(regex, str, NULL);
+			re_match(regex, str, NULL);
 			if (!errno) {
 				re_print(regex);
 				fprintf(stderr, "[%zu/%zu]: pattern '%s' matched '%s' unexpectedly.\n", i+1, ntests, tests[i], str);

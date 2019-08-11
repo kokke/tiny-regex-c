@@ -34,13 +34,13 @@ The main design goal of this library is to be small, correct, self contained and
 
 	Note that a capturing inverted group (e.g. (!:regex) ) will always capture nothing.
 - For testing, [exrex](https://github.com/asciimoo/exrex) is used to randomly generate test-cases from regex patterns, which are fed into the regex code for verification. Try `make test` to generate a few thousand tests cases yourself.
-- Small code and binary size: <1000 SLOC, ~5kb binary for x86. Statically #define'd memory usage / allocation.
-- Compiled for x86 using GCC 4.7.4 and optimizing for size, the binary takes up ~5kb code space and allocates ~0.2kb RAM:
+- Small code and binary size: <1000 SLOC, ~6kb binary for x86. Statically #define'd memory usage / allocation.
+- Compiled for x86 using GCC 8.3.0 and optimizing for size, the binary takes up ~5kb code space and allocates ~0.2kb RAM:
   ```
   > gcc -Os -c re.c
   > size re.o
-      text     data     bss     dec     hex  filename
-      4701      208       0    4909     132d re.o
+	text    data     bss     dec     hex filename
+	5354     208      72    5634    1602 re.o
       
   ```
 
@@ -121,6 +121,7 @@ For more usage examples I encourage you to look at the code in the `tests`-folde
 - More tests that include atomics, word boundaries, \R and modifiers.
 - Implement captures.
 - Implement lookarounds and inverted groups.
+- Implement backwards (<) modifier
 - Implement branches (| operator).
 - Add file sizes for other architectures in README.md.
 - Add `tests/speed.c` for performance and time measurements.

@@ -18,6 +18,7 @@ typedef struct Test
 
 Test testvector[] =
 {
+	{ true , "a+a"                       , "aaa"                    },
 	{ false , "a"                        , ""                       },
 	{ false , "[^s][^b]"                 , "a"                      },
 	{ false , "[^\\d]+\\s"               , "e"                      },
@@ -99,7 +100,7 @@ Test testvector[] =
 	{ false , "abcd"                     , "aBcD"                   },
 	{ true  , "(?i:abcd)"                , "aBcD"                   },
 	{ false , "..."                      , "\n \n"                  },
-	{ true  , "(?s:...)"                 , "\n \n"                  }
+	{ true  , "(?s:...)"                 , "\n \n"                  },
 };
 
 

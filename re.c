@@ -148,9 +148,7 @@ modifierchars[] =
  * GLOBAL VARIABLES
  */
 
-re_Token* groupstack[MAXGROUPS] = {NULL};
-size_t groupstacki = 0;
-
+/* used by both compilation and matching to store modifiers of groups */
 uint_fast8_t modifierstack[MAXGROUPS] = {0};
 size_t modifierstacki = 0;
 
@@ -160,7 +158,7 @@ size_t modifierstacki = 0;
 
 void re_compile(Regex* compiled, const char* pattern)
 {
-	groupstacki = 0;
+	modifierstacki = 0;
 	compiled->ccli = 0;
 	size_t pi = 0; /* index into pattern  */
 	size_t ri = 0; /* index into compiled */
@@ -190,7 +188,7 @@ void re_compile(Regex* compiled, const char* pattern)
 	/* indicate the end of the regex */
 	compiled->tokens[ri].type = TOKEN_END;
 
-	if (groupstacki)
+	if (modifierstacki)
 		errno = EINVAL;
 }
 
@@ -210,6 +208,7 @@ static size_t compileone(re_Token* compiled, const char* pattern, ClassChar cclb
 					/* metabackslash */
 					compiled->type = TOKEN_METABSL;
 					compiled->meta = i;
+					/* used by both compilation and matching to store modifiers of groups */
 					return 2;
 				}
 			}
@@ -254,8 +253,7 @@ static size_t compileone(re_Token* compiled, const char* pattern, ClassChar cclb
 			cclbuf[(*ccli)++].type = CCL_END;
 			return i+1;
 		case '(':
-			/* group */
-			compiled->type = TOKEN_GROUP;
+			/* group, lookahead or inverted lookahead */
 			i = 1;
 
 			compiled->capturing = true;
@@ -265,8 +263,8 @@ static size_t compileone(re_Token* compiled, const char* pattern, ClassChar cclb
 			}
 
 			compiled->modifiers = 0;
-			if (groupstacki)
-				compiled->modifiers = groupstack[groupstacki-1]->modifiers;
+			if (modifierstacki)
+				compiled->modifiers = modifierstack[modifierstacki-1];
 			for (;;) {
 				for (size_t j = 0; j < sizeof(modifierchars)/sizeof(modifierchars[0]); ++j) {
 					if (pattern[i] == modifierchars[j].pattern) {
@@ -291,28 +289,30 @@ modifierfound:
 				continue;
 			}
 
-			compiled->grouptype = GROUP_NORMAL;
 			if (pattern[i] == '=') {
-				compiled->grouptype = GROUP_LOOKAROUND;
+				compiled->type = TOKEN_LOOKAHEAD;
 				++i;
 			} else if (pattern[i] == '!') {
-				compiled->grouptype = GROUP_INVERTED;
+				compiled->type = TOKEN_INVLOOKAHEAD;
 				++i;
 			} else if (pattern[i] == ':') {
+				compiled->type = TOKEN_GROUP;
 				++i;
+			} else {
+				compiled->type = TOKEN_GROUP;
 			}
 
-			if (groupstacki >= MAXGROUPS) {
+			if (modifierstacki >= MAXGROUPS) {
 				errno = ENOBUFS;
 				return 0;
 			}
-			groupstack[groupstacki] = compiled;
-			++groupstacki;
+			modifierstack[modifierstacki] = compiled->modifiers;
+			++modifierstacki;
 			return i;
 		case ')':
 			/* group end */
 			compiled->type = TOKEN_GROUPEND;
-			--groupstacki;
+			--modifierstacki;
 			return 1;
 		case '\0':
 			/* shouldn't happen */
@@ -554,50 +554,35 @@ size_t re_matchg(Regex pattern, const char* text)
 
 static size_t matchpattern(re_Token* pattern, const char* text, size_t i, uint_fast8_t* modifiers)
 {
-	const size_t starti = i;
+	size_t positions[MAXTOKENS];
+	uint_fast8_t counts[MAXTOKENS];
 
-	/* consume as many tokens as you can iteratively, to avoid as much recursion as possible */
-	for (;;) {
-		if (pattern[0].type == TOKEN_END)
+	size_t pos = i;
+
+	for (size_t pi = 0; pattern[pi].type != TOKEN_END; ++pi) {
+		positions[pi] = pos;
+		counts[pi] = pattern[pi].greedy ? pattern[pi].quantifiermax : pattern[pi].quantifiermin;
+		pos += matchcount(pattern[pi], &counts[pi], text, pos, modifiers);
+		if (counts[pi] < pattern[pi].quantifiermin) {
+			/* backtrack */
+			while (pi--) {
+				if (!pattern[pi].atomic && pattern[pi].greedy && counts[pi] > pattern[pi].quantifiermin) {
+					--counts[pi];
+					goto changecount;
+				} else if (!pattern[pi].atomic && !pattern[pi].greedy && counts[pi] < pattern[pi].quantifiermax) {
+					++counts[pi];
+					goto changecount;
+				}
+			}
+			/* all backtracking has been done, fail */
 			return 0;
-		if (pattern[0].quantifiermin != pattern[0].quantifiermax && !pattern[0].atomic)
-			break;
-		uint_fast8_t count = pattern[0].greedy ? pattern[0].quantifiermax : pattern[0].quantifiermin;
-		i += matchcount(pattern[0], &count, text, i, modifiers);
-		if (count < pattern[0].quantifiermin)
-			return 0;
-		++pattern;
-	}
-
-	const size_t oldi = i;
-
-	/* all the tokens that can be iteratively consumed have been, now recurse */
-	uint_fast8_t count = pattern[0].greedy ? pattern[0].quantifiermax : pattern[0].quantifiermin;
-	for (;;) {
-		i = oldi;
-		i += matchcount(pattern[0], &count, text, i, modifiers);
-		if (count < pattern[0].quantifiermin)
-			return 0;
-
-		errno = 0;
-		i += matchpattern(pattern+1, text, i, modifiers);
-
-		if (!errno)
-			break;
-
-		if (pattern[0].greedy) {
-			if (count <= pattern[0].quantifiermin)
-				return 0;
-			--count;
-		} else {
-			if (count >= pattern[0].quantifiermax)
-				return 0;
-			++count;
+changecount:
+			pos = positions[pi];
+			pos += matchcount(pattern[pi], &counts[pi], text, pos, modifiers);
 		}
 	}
-
 	errno = 0;
-	return i-starti;
+	return pos-i;
 }
 
 static size_t matchcount(re_Token pattern, uint_fast8_t* count, const char* text, size_t i, uint_fast8_t* modifiers)

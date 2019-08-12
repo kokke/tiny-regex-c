@@ -46,23 +46,17 @@ typedef struct ClassChar
 /* the different types that each regex token can be */
 typedef enum TokenType
 {
-	TOKEN_END, /* the end of the regex */
+	TOKEN_END, /* the end of the regex, group or lookahead */
 	TOKEN_GROUP, /* a group */
-	TOKEN_GROUPEND, /* the end of a group */
+	TOKEN_LOOKAHEAD, /* a lookahead or lookbehind */
+	TOKEN_INVLOOKAHEAD, /* inverted */
+	TOKEN_GROUPEND, /* end of group, lookahead, or inverted */
 	TOKEN_METABSL, /* metabackslash: meta character sequences that begin with backslash */
 	TOKEN_METACHAR, /* a metachar, such as $ */
 	TOKEN_CHARCLASS, /* a character class that is surrounded by [...] */
 	TOKEN_INVCHARCLASS, /* a character class that is inverted by placing a ^ at the start [^...] */
 	TOKEN_CHAR /* a literal character */
 } TokenType;
-
-/* the different types that each group can be */
-typedef enum GroupType
-{
-	GROUP_NORMAL, /* a normal group that eats characters */
-	GROUP_LOOKAROUND, /* a group that doesn't eat characters */
-	GROUP_INVERTED /* an inverted group */
-} GroupType;
 
 /* struct for each regex token */
 typedef struct re_Token
@@ -73,11 +67,10 @@ typedef struct re_Token
 		size_t meta; /* METABSL/INVMETABSL/METACHAR: index in metabsls/metachars */
 		ClassChar* ccl; /* CHARCLASS/INVCHARCLASS: a pointer to characters in class (pointer to somewhere in cclbuf) */
 		char ch; /* CHAR: the character itself */
-		struct /* GROUP */
+		struct /* GROUP/LOOKAHEAD/INVLOOKAHEAD */
 		{
 			bool capturing;
 			uint_fast8_t modifiers;
-			GroupType grouptype;
 		};
 	};
 	uint_fast8_t quantifiermin;

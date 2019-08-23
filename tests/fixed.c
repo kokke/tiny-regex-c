@@ -18,8 +18,8 @@ typedef struct Test
 
 Test testvector[] =
 {
-	{ true , "a+a"                       , "aaa"                    },
 	{ false , "a"                        , ""                       },
+	{ true  , "a*"                       , ""                       },
 	{ false , "[^s][^b]"                 , "a"                      },
 	{ false , "[^\\d]+\\s"               , "e"                      },
 	{ true  , "\\d"                      , "5"                      },
@@ -41,6 +41,7 @@ Test testvector[] =
 	{ false , "[\\d]"                    , "d"                      },
 	{ false , "[^\\D]"                   , "d"                      },
 	{ true  , "[\\D]"                    , "d"                      },
+	{ true  , "a+a"                      , "aaa"                    },
 	{ true  , "^.*\\\\.*$"               , "c:\\Tools"              },
 	{ true  , "^[\\+-]*[\\d]+$"          , "+27"                    },
 	{ true  , "[abc]"                    , "1c2"                    },
@@ -101,6 +102,31 @@ Test testvector[] =
 	{ true  , "(?i:abcd)"                , "aBcD"                   },
 	{ false , "..."                      , "\n \n"                  },
 	{ true  , "(?s:...)"                 , "\n \n"                  },
+	{ false , "(?s:(?-s:.))"             , "\n"                     },
+	{ true  , "(?is:A.)"                 , "a\n"                    },
+	{ false , "(?is:(?-is:.g.))"         , "\nG\n"                  },
+	{ true  , "(?is:(?-is:.g.))"         , "\ng\n"                  },
+	{ false , "abc\\bdef"                , "abcdef"                 },
+	{ true  , "abc\\Bdef"                , "abcdef"                 },
+	{ true  , "\\Bing\\b"                , "joining."               },
+	{ false , "\\Bing\\b"                , " ing "                  },
+	{ false,  "\\Bing\\b"                , "ing"                    },
+	{ false , "\\Bing\\b"                , "bingg"                  },
+	{ true  , "abc\\Rdef"                , "abc\r\ndef"             },
+	{ true  , "abc\\Rdef"                , "abc\ndef"               },
+	{ false , "abc\n\\Rdef"              , "abc\ndef"               },
+	{ true  , "abc\r\\Rdef"              , "abc\r\ndef"             },
+	{ true  , "^(a+)a$"                  , "aaa"                    },
+	{ true  , "^a(a*)a$"                 , "aa"                     },
+	{ true  , "^(a)+a$"                  , "aaa"                    },
+	{ true  , "^(Hello){3}(World){1,2}$" , "HelloHelloHelloWorld"   },
+	{ true  , "^(is:[ab])+?bc$"          , "aAaAaaAAaaAAAAbAaaAbc"  },
+	{ true  , "(?=.*ghi)abc"             , "abcdefghi"              },
+	{ true  , "(?s=.*END)BEGIN"          , "BEGIN..content..\nEND"  },
+	{ false , "(?s=.*END)BEGIN"          , "BEGIN..content..\n"     },
+	{ false , "(?s!.*END)BEGIN"          , "BEGIN..content..\nEND"  },
+	{ true  , "(?s!.*END)BEGIN"          , "BEGIN..content..\n"     },
+	{ false , "(b*){1}+b"                , "bbbbb"                  },
 };
 
 
@@ -123,6 +149,7 @@ int main()
 		if (testvector[i].shouldsucceed && errno) {
 			/* failed where it should have succeeded */
 			re_print(pattern);
+			printf("\n");
 			fprintf(stderr, "[%zu/%zu]: pattern '%s' didn't match '%s' as expected.\n", i+1, ntests, testvector[i].pattern, testvector[i].text);
 			++nfailed;
 		} else if (!testvector[i].shouldsucceed && !errno) {
@@ -130,7 +157,9 @@ int main()
 			fprintf(stderr, "[%zu/%zu]: pattern '%s' matched '%s' unexpectedly.\n", i+1, ntests, testvector[i].pattern, testvector[i].text);
 			++nfailed;
 		} else {
-			/* fprintf(stderr, "[%zu/%zu]: pattern '%s' worked as expected.\n", i+1, ntests, testvector[i].pattern); */
+			/*
+			fprintf(stderr, "[%zu/%zu]: pattern '%s' worked as expected.\n", i+1, ntests, testvector[i].pattern);
+			*/
 		}
 	}
 

@@ -72,7 +72,9 @@ const char* tests[] =
 	"[1379][2468][abcdef]",
 	"[012345-9]",
 	"[0-56789]",
-	".*123faerdig"
+	".*123faerdig",
+	"(.)+(.+).+",
+	"(?:abc*)+c{2,4}c",
 };
 
 const char* genpass(const char* pattern, pcre2_code* regex);

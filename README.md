@@ -28,19 +28,19 @@ The main design goal of this library is to be small, correct, self contained and
 	- An open bracket.
 	- Nothing if the group is capturing, and ? if it isn't.
 	- A list of modifiers in any order
-	- An equals sign if the group is a lookaround (doesn't 'eat' any characters); an exclamation mark if the group is inverted; a colon if the group has any characters between the open bracket and the colon, and nothing otherwise.
+	- An equals sign if the group is a lookaround (doesn't 'eat' any characters); an exclamation mark if the group is an inverted lookaround; a colon if the group has any characters between the open bracket and the colon, and nothing otherwise.
 	- A regex.
 	- A close bracket.
 
-	Note that a capturing inverted group (e.g. (!:regex) ) will always capture nothing.
+	You cannot do a capturing lookaround (=regex), (!regex).
 - For testing, [exrex](https://github.com/asciimoo/exrex) is used to randomly generate test-cases from regex patterns, which are fed into the regex code for verification. Try `make test` to generate a few thousand tests cases yourself.
 - Small code and binary size: <1000 SLOC, ~6kb binary for x86. Statically #define'd memory usage / allocation.
-- Compiled for x86 using GCC 8.3.0 and optimizing for size, the binary takes up ~5kb code space and allocates ~0.2kb RAM:
+- Compiled for x86 using GCC 8.3.0 and optimizing for size, the binary takes up ~6kb code space and allocates ~0.2kb RAM:
   ```
   > gcc -Os -c re.c
   > size re.o
-	text    data     bss     dec     hex filename
-	5354     208      72    5634    1602 re.o
+   text    data     bss     dec     hex filename
+   5797     208      72    6077    17bd re.o
       
   ```
 
@@ -86,11 +86,16 @@ The following features / regex-operators are supported by this library.
  - `\B`       Non-word boundary
  - `i`        case Insensitive modifier
  - `s`        Single line modifier (where a dot matches newlines too)
+ - `()`       Groups (capturing is not currently implemented)
+ - `(?:)`     Non-capturing groups
+ - `(?is:)`   Non-capturing groups with modifiers
+ - `(?=)`     Lookaheads
+ - `(?!)`     Inverted lookaheads
 
 ## Usage
 Compile a regex from ASCII-string (char-array) to a custom pattern structure using `re_compile()`.
 
-Search a text-string for a regex and get an index into the string, using `re_smatch()` or `re_rmatch()`.
+Search a text-string for a regex and get an index into the string, using `re_match()`.
 
 The returned index points to the first place in the string, where the regex pattern matches.
 
@@ -118,11 +123,10 @@ if (!errno)
 For more usage examples I encourage you to look at the code in the `tests`-folder, as well as `example.c` for a simple `grep` implementation.
 
 ## TODO
-- More tests that include atomics, word boundaries, \R and modifiers.
 - Implement captures.
-- Implement lookarounds and inverted groups.
-- Implement backwards (<) modifier
+- Implement backwards (<) modifier for lookbehinds.
 - Implement branches (| operator).
+- Make groupstack a local variable for thread-safety.
 - Add file sizes for other architectures in README.md.
 - Add `tests/speed.c` for performance and time measurements.
 

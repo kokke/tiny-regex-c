@@ -20,6 +20,10 @@ extern "C" {
 /* max number of nested groups */
 #define MAXGROUPS 5
 
+typedef uint_fast8_t Modifiers;
+typedef uint_fast8_t Quantifier;
+#define QUANTIFIERMAX UINT_FAST8_MAX
+
 /* enum for all the types a char in a char class can be */
 typedef enum ClassCharType
 {
@@ -46,11 +50,11 @@ typedef struct ClassChar
 /* the different types that each regex token can be */
 typedef enum TokenType
 {
-	TOKEN_END, /* the end of the regex, group or lookahead */
-	TOKEN_GROUP, /* a group */
-	TOKEN_LOOKAHEAD, /* a lookahead or lookbehind */
-	TOKEN_INVLOOKAHEAD, /* inverted */
-	TOKEN_GROUPEND, /* end of group, lookahead, or inverted */
+	TOKEN_END, /* the end of the regex or lookaround */
+	TOKEN_GROUP, /* group */
+	TOKEN_CGROUP, /* capturing group */
+	TOKEN_LOOKAROUND, /* lookaround */
+	TOKEN_INVLOOKAROUND, /* inverted lookaround */
 	TOKEN_METABSL, /* metabackslash: meta character sequences that begin with backslash */
 	TOKEN_METACHAR, /* a metachar, such as $ */
 	TOKEN_CHARCLASS, /* a character class that is surrounded by [...] */
@@ -59,25 +63,23 @@ typedef enum TokenType
 } TokenType;
 
 /* struct for each regex token */
-typedef struct re_Token
+typedef struct re_Token re_Token;
+struct re_Token
 {
 	TokenType type;
 	union
 	{
+		size_t grouplen; /* END/GROUP/CGROUP/LOOKAROUND/INVLOOKAROUND: length of the group */
 		size_t meta; /* METABSL/INVMETABSL/METACHAR: index in metabsls/metachars */
 		ClassChar* ccl; /* CHARCLASS/INVCHARCLASS: a pointer to characters in class (pointer to somewhere in cclbuf) */
 		char ch; /* CHAR: the character itself */
-		struct /* GROUP/LOOKAHEAD/INVLOOKAHEAD */
-		{
-			bool capturing;
-			uint_fast8_t modifiers;
-		};
 	};
-	uint_fast8_t quantifiermin;
-	uint_fast8_t quantifiermax;
+	Modifiers modifiers;
+	Quantifier quantifiermin;
+	Quantifier quantifiermax;
 	bool greedy; /* whether the token is greedy (takes up as many characters as possible) or lazy (takes up as few characters as possible) */
 	bool atomic; /* whether the token is atomic (cannot change if the rest of the regex fails) or not; sometimes known as possessive */
-} re_Token;
+};
 
 /* main struct for a regex */
 typedef struct Regex

@@ -20,33 +20,19 @@ I think you should test the patterns you are going to use. You can easily modify
 The main design goal of this library is to be small, correct, self contained and use few resources while retaining acceptable performance and feature completeness. Clarity of the code is also highly valued.
 
 ### Notable features and omissions
-- Small code and binary size: <500 SLOC, ~3kb binary for x86. Statically #define'd memory usage / allocation.
+- Small code and binary size: 500 SLOC, ~3kb binary for x86. Statically #define'd memory usage / allocation.
 - No use of dynamic memory allocation (i.e. no calls to `malloc` / `free`).
 - To avoid call-stack exhaustion, iterative searching is preferred over recursive by default (can be changed with a pre-processor flag).
 - No support for capturing groups or named capture: `(^P<name>group)` etc.
 - Thorough testing : [exrex](https://github.com/asciimoo/exrex) is used to randomly generate test-cases from regex patterns, which are fed into the regex code for verification. Try `make test` to generate a few thousand tests cases yourself.
-- Compiled for x86 using GCC 4.7.4 and optimizing for size, the binary takes up ~2-3kb code space and allocates ~0.5kb RAM :
+- Provides character length of matches.
+- Compiled for x86 using GCC 7.2.0 and optimizing for size, the binary takes up ~2-3kb code space and allocates ~0.5kb RAM :
   ```
   > gcc -Os -c re.c
   > size re.o
       text     data     bss     dec     hex filename
-      2319        0     544    2863     b2f re.o
+      2440      160     544    3144     c48 re.o
       
-  ```
-  For ARM/Thumb using GCC 4.8.1 it's around 1.5kb code and less RAM :
-  ```
-  > arm-none-eabi-gcc -Os -mthumb -c re.c
-  > size re.o
-      text     data     bss     dec     hex filename
-      1418        0     280    1698     6a2 re.o
-
-  ```
-  For 8-bit AVR using AVR-GCC 4.8.1 it's around 2kb code and less RAM :
-  ```
-  > avr-gcc -Os -c re.c
-  > size re.o
-      text     data     bss     dec     hex filename
-      2128        0     130    2258     8d2 re.o
   ```
 
 
@@ -61,10 +47,10 @@ typedef struct regex_t* re_t;
 re_t re_compile(const char* pattern);
 
 /* Finds matches of the compiled pattern inside text. */
-int  re_matchp(re_t pattern, const char* text);
+int  re_matchp(re_t pattern, const char* text, int* matchlength);
 
 /* Finds matches of pattern inside text (compiles first automatically). */
-int  re_match(const char* pattern, const char* text);
+int  re_match(const char* pattern, const char* text, int* matchlength);
 ```
 
 ### Supported regex-operators
@@ -97,11 +83,14 @@ Search a text-string for a regex and get an index into the string, using `re_mat
 
 The returned index points to the first place in the string, where the regex pattern matches.
 
+The integer pointer passed will hold the length of the match.
+
 If the regular expression doesn't match, the matching function returns an index of -1 to indicate failure.
 
 ### Examples
 Example of usage:
 ```C
+/* Standard int to hold length of match */
 /* Standard null-terminated C-string to search: */
 const char* string_to_search = "ahem.. 'hello world !' ..";
 
@@ -109,10 +98,10 @@ const char* string_to_search = "ahem.. 'hello world !' ..";
 re_t pattern = re_compile("[Hh]ello [Ww]orld\\s*[!]?");
 
 /* Check if the regex matches the text: */
-int match_idx = re_matchp(pattern, string_to_search);
+int match_idx = re_matchp(pattern, string_to_search, &match_length);
 if (match_idx != -1)
 {
-  printf("match at idx %d.\n", match_idx);
+  printf("match at idx %d, %i chars long.\n", match_idx, match_length);
 }
 ```
 
@@ -128,7 +117,7 @@ For more usage examples I encourage you to look at the code in the `tests`-folde
 ### FAQ
 - *Q: What differentiates this library from other C regex implementations?*
 
-  A: Well, the small size for one. <500 lines of C-code compiling to 2-3kb ROM, using very little RAM.
+  A: Well, the small size for one. 500 lines of C-code compiling to 2-3kb ROM, using very little RAM.
 
 ### License
 All material in this repository is in the public domain.

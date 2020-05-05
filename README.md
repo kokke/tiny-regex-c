@@ -91,6 +91,8 @@ If the regular expression doesn't match, the matching function returns an index 
 Example of usage:
 ```C
 /* Standard int to hold length of match */
+int match_length;
+
 /* Standard null-terminated C-string to search: */
 const char* string_to_search = "ahem.. 'hello world !' ..";
 

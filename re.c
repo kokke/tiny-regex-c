@@ -13,7 +13,7 @@
  *   '$'        End anchor, matches end of string
  *   '*'        Asterisk, match zero or more (greedy)
  *   '+'        Plus, match one or more (greedy)
- *   '?'        Question, match zero or one (non-greedy)
+ *   '?'        Question, match zero or one (greedy)
  *   '[abc]'    Character class, match if one of {'a', 'b', 'c'}
  *   '[^abc]'   Inverted class, match if NOT one of {'a', 'b', 'c'} -- NOTE: feature is currently broken!
  *   '[a-zA-Z]' Character ranges, the character set of the ranges { a-z | A-Z }
@@ -237,8 +237,6 @@ void re_print(regex_t* pattern)
   const char* types[] = { "UNUSED", "DOT", "BEGIN", "END", "QUESTIONMARK", "STAR", "PLUS", "CHAR", "CHAR_CLASS", "INV_CHAR_CLASS", "DIGIT", "NOT_DIGIT", "ALPHA", "NOT_ALPHA", "WHITESPACE", "NOT_WHITESPACE", "BRANCH" };
 
   int i;
-  int j;
-  char c;
   for (i = 0; i < MAX_REGEXP_OBJECTS; ++i)
   {
     if (pattern[i].type == UNUSED)
@@ -250,6 +248,8 @@ void re_print(regex_t* pattern)
     if (pattern[i].type == CHAR_CLASS || pattern[i].type == INV_CHAR_CLASS)
     {
       printf(" [");
+      int j;
+      char c;
       for (j = 0; j < MAX_CHAR_CLASS_LEN; ++j)
       {
         c = pattern[i].ccl[j];

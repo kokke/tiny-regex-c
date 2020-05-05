@@ -410,19 +410,20 @@ static int matchquestion(regex_t p, regex_t* pattern, const char* text, int* mat
 {
   if (p.type == UNUSED)
     return 1;
-  if (matchpattern(pattern, text, matchlength))
-      return 1;
-  if (*text && matchone(p, *text++))
+  if (*text && matchone(p, *text))
   {
-    if (matchpattern(pattern, text, matchlength))
+    if (matchpattern(pattern, text+1, matchlength))
     {
       (*matchlength)++;
       return 1;
     }
   }
+  if (matchpattern(pattern, text, matchlength))
+  {
+    return 1;
+  }
   return 0;
 }
-
 
 #if 0
 

@@ -22,7 +22,7 @@ The main design goal of this library is to be small, correct, self contained and
 ### Notable features and omissions
 - Small code and binary size: 500 SLOC, ~3kb binary for x86. Statically #define'd memory usage / allocation.
 - No use of dynamic memory allocation (i.e. no calls to `malloc` / `free`).
-- To avoid call-stack exhaustion, iterative searching is preferred over recursive by default (can be changed with a pre-processor flag).
+- To avoid call-stack exhaustion, iterative searching is preferred over recursive by default.
 - No support for capturing groups or named capture: `(^P<name>group)` etc.
 - Thorough testing : [exrex](https://github.com/asciimoo/exrex) is used to randomly generate test-cases from regex patterns, which are fed into the regex code for verification. Try `make test` to generate a few thousand tests cases yourself.
 - Provides character length of matches.
@@ -31,7 +31,7 @@ The main design goal of this library is to be small, correct, self contained and
   > gcc -Os -c re.c
   > size re.o
       text     data     bss     dec     hex filename
-      2440      160     544    3144     c48 re.o
+      2424      160     544    3124     c38 re.o
       
   ```
 
@@ -64,7 +64,7 @@ NOTE: inverted character classes are buggy - see the test harness for concrete e
   -  `$`         End anchor, matches end of string
   -  `*`         Asterisk, match zero or more (greedy)
   -  `+`         Plus, match one or more (greedy)
-  -  `?`         Question, match zero or one (non-greedy)
+  -  `?`         Question, match zero or one (greedy)
   -  `[abc]`     Character class, match if one of {'a', 'b', 'c'}
   -  `[^abc]`   Inverted class, match if NOT one of {'a', 'b', 'c'}
   **`NOTE: This feature is currently broken for some usage of character ranges!`**

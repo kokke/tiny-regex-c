@@ -49,6 +49,9 @@ int  re_matchp(re_t pattern, const char* text, int* matchlenght);
 int  re_match(const char* pattern, const char* text, int* matchlenght);
 
 
+void re_print(struct regex_t* pattern);
+
+
 #ifdef __cplusplus
 }
 #endif

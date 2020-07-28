@@ -63,6 +63,7 @@ static int matchalpha(char c);
 static int matchwhitespace(char c);
 static int matchmetachar(char c, const char* str);
 static int matchrange(char c, const char* str);
+static int matchdot(char c);
 static int ismetachar(char c);
 
 
@@ -294,6 +295,10 @@ static int matchrange(char c, const char* str)
          (str[1] == '-') && (str[1] != '\0') &&
          (str[2] != '\0') && ((c >= str[0]) && (c <= str[2])));
 }
+static int matchdot(char c)
+{
+  return c != '\n' && c != '\r';
+}
 static int ismetachar(char c)
 {
   return ((c == 's') || (c == 'S') || (c == 'w') || (c == 'W') || (c == 'd') || (c == 'D'));
@@ -355,7 +360,7 @@ static int matchone(regex_t p, char c)
 {
   switch (p.type)
   {
-    case DOT:            return 1;
+    case DOT:            return matchdot(c);
     case CHAR_CLASS:     return  matchcharclass(c, (const char*)p.ccl);
     case INV_CHAR_CLASS: return !matchcharclass(c, (const char*)p.ccl);
     case DIGIT:          return  matchdigit(c);

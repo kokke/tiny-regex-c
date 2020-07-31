@@ -290,9 +290,13 @@ static int matchalphanum(char c)
 }
 static int matchrange(char c, const char* str)
 {
-  return ((c != '-') && (str[0] != '\0') && (str[0] != '-') &&
-         (str[1] == '-') && (str[2] != '\0') && 
-         ((c >= str[0]) && (c <= str[2])));
+  return (    (c != '-')
+           && (str[0] != '\0')
+           && (str[0] != '-')
+           && (str[1] == '-')
+           && (str[2] != '\0')
+           && (    (c >= str[0])
+                && (c <= str[2])));
 }
 static int ismetachar(char c)
 {

@@ -27,6 +27,10 @@
  *
  */
 
+#ifndef RE_DOT_MATCES_NEWLINE
+#define RE_DOT_MATCES_NEWLINE 1
+#endif
+
 #ifdef __cplusplus
 extern "C"{
 #endif

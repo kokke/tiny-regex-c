@@ -302,6 +302,7 @@ static int matchrange(char c, const char* str)
 static int matchdot(char c)
 {
 #if defined(RE_DOT_MATCES_NEWLINE) && (RE_DOT_MATCES_NEWLINE == 1)
+  (void)c;
   return 1;
 #else
   return c != '\n' && c != '\r';

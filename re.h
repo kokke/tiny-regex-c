@@ -28,6 +28,7 @@
  */
 
 #ifndef RE_DOT_MATCES_NEWLINE
+/* Define to 0 if you DON'T want '.' to match '\r' + '\n' */
 #define RE_DOT_MATCES_NEWLINE 1
 #endif
 

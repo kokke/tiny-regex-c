@@ -301,7 +301,7 @@ static int matchrange(char c, const char* str)
 }
 static int matchdot(char c)
 {
-#if defined(RE_DOT_MATCES_NEWLINE) && (RE_DOT_MATCES_NEWLINE == 1)
+#if defined(RE_DOT_MATCHES_NEWLINE) && (RE_DOT_MATCHES_NEWLINE == 1)
   (void)c;
   return 1;
 #else

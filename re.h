@@ -27,9 +27,9 @@
  *
  */
 
-#ifndef RE_DOT_MATCES_NEWLINE
+#ifndef RE_DOT_MATCHES_NEWLINE
 /* Define to 0 if you DON'T want '.' to match '\r' + '\n' */
-#define RE_DOT_MATCES_NEWLINE 1
+#define RE_DOT_MATCHES_NEWLINE 1
 #endif
 
 #ifdef __cplusplus

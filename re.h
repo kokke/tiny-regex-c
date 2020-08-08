@@ -27,6 +27,10 @@
  *
  */
 
+#ifndef _TINY_REGEX_C
+#define _TINY_REGEX_C
+
+
 #ifndef RE_DOT_MATCHES_NEWLINE
 /* Define to 0 if you DON'T want '.' to match '\r' + '\n' */
 #define RE_DOT_MATCHES_NEWLINE 1
@@ -57,3 +61,5 @@ int  re_match(const char* pattern, const char* text, int* matchlenght);
 #ifdef __cplusplus
 }
 #endif
+
+#endif /* ifndef _TINY_REGEX_C */

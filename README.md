@@ -31,7 +31,7 @@ The main design goal of this library is to be small, correct, self contained and
   > gcc -Os -c re.c
   > size re.o
       text     data     bss     dec     hex filename
-      2440      160     544    3144     c48 re.o
+      2404        0     304    2708     a94 re.o
       
   ```
 

@@ -35,7 +35,7 @@ test: all
 	@echo
 	@echo Testing hand-picked regex\'s:
 	@./tests/test1
-	@echo Testing handling of invalid regex patterns:
+	@echo Testing handling of invalid regex patterns
 	@./tests/test_compile
 	@echo Testing patterns against $(NRAND_TESTS) random strings matching the Python implementation and comparing:
 	@echo

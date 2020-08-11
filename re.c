@@ -180,6 +180,10 @@ re_t re_compile(const char* pattern)
         {
           re_compiled[j].type = INV_CHAR_CLASS;
           i += 1; /* Increment i to avoid including '^' in the char-buffer */
+          if (pattern[i+1] == 0) /* incomplete pattern, missing non-zero char after '^' */
+          {
+            return 0;
+          }
         }  
         else
         {
@@ -195,6 +199,10 @@ re_t re_compile(const char* pattern)
             if (ccl_bufidx >= MAX_CHAR_CLASS_LEN - 1)
             {
               //fputs("exceeded internal buffer!\n", stderr);
+              return 0;
+            }
+            if (pattern[i+1] == 0) /* incomplete pattern, missing non-zero char after '\\' */
+            {
               return 0;
             }
             ccl_buf[ccl_bufidx++] = pattern[i++];

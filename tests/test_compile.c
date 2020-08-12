@@ -4,26 +4,19 @@ This file tests two bug patterns reported by @DavidKorczynski in https://github.
 
 */
 
-#include <stdlib.h>
 #include <assert.h>
+#include <stdlib.h> /* for NULL */
 #include "re.h"
 
-const char* invalid_patterns[] = {
-  "\\\x01[^\\\xff][^",
-  "\\\x01[^\\\xff][\\",
-};
 
-
-int main(void)
+int main()
 {
-  const size_t npatterns = sizeof(invalid_patterns)/sizeof(*invalid_patterns);
-  size_t i;
+  /* Test 1: inverted set without a closing ']' */
+  assert(re_compile("\\\x01[^\\\xff][^") == NULL);
 
-  /* loop through all invalid patterns and assume compilation rejects them (returns NULL) */
-  for (i = 0U; i < npatterns; ++i)
-  {
-    assert(re_compile(invalid_patterns[i]) == NULL);
+  /* Test 2: set with an incomplete escape sequence and without a closing ']' */
+  assert(re_compile("\\\x01[^\\\xff][\\") == NULL);
 
-  }
   return 0;
 }
+

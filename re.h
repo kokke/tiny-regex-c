@@ -58,12 +58,12 @@ re_t re_compile(const char* pattern);
 int  re_matchp(re_t pattern, const char* text, int* matchlenght);
 
 /* Free memory of the compiled pattern */
-#if defined(RE_ENABLE_MULTI_PATTERNS) && (RE_ENABLE_MULTI_PATTERNS == 1)
+#if (RE_ENABLE_MULTI_PATTERNS == 1)
 void re_freecompile(re_t pattern);
 #endif
 
 /* Find matches of the txt pattern inside text (will compile automatically first). */
-int re_match(const char *pattern, const char *text, int *matchlenght);
+int  re_match(const char* pattern, const char* text, int* matchlenght);
 
 
 #ifdef __cplusplus

@@ -36,6 +36,11 @@
 #define RE_DOT_MATCHES_NEWLINE 1
 #endif
 
+/* Define to Support for multiple patterns */
+#ifndef RE_ENABLE_MULTI_PATTERNS
+#define RE_ENABLE_MULTI_PATTERNS 0
+#endif
+
 #ifdef __cplusplus
 extern "C"{
 #endif
@@ -53,10 +58,12 @@ re_t re_compile(const char* pattern);
 int  re_matchp(re_t pattern, const char* text, int* matchlenght);
 
 /* Free memory of the compiled pattern */
+#if defined(RE_ENABLE_MULTI_PATTERNS) && (RE_ENABLE_MULTI_PATTERNS == 1)
 void re_freecompile(re_t pattern);
+#endif
 
 /* Find matches of the txt pattern inside text (will compile automatically first). */
-int  re_match(const char* pattern, const char* text, int* matchlenght);
+int re_match(const char *pattern, const char *text, int *matchlenght);
 
 
 #ifdef __cplusplus

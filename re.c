@@ -71,6 +71,7 @@ static int ismetachar(char c);
 /* Public functions: */
 int re_match(const char* pattern, const char* text, int* matchlength)
 {
+#if defined(RE_ENABLE_MULTI_PATTERNS) && (RE_ENABLE_MULTI_PATTERNS == 1)
   re_t re_p; /* pointer to (to be created) copy of compiled regex */
   int ret = -1;
 
@@ -79,6 +80,9 @@ int re_match(const char* pattern, const char* text, int* matchlength)
   free(re_p);
 
   return (ret);
+#else
+  return re_matchp(re_compile(pattern), text, matchlength);
+#endif
 }
 
 int re_matchp(re_t pattern, const char* text, int* matchlength)
@@ -120,7 +124,9 @@ re_t re_compile(const char* pattern)
   static regex_t re_compiled[MAX_REGEXP_OBJECTS];
   static unsigned char ccl_buf[MAX_CHAR_CLASS_LEN];
   int ccl_bufidx = 1;
+#if defined(RE_ENABLE_MULTI_PATTERNS) && (RE_ENABLE_MULTI_PATTERNS == 1)
   re_t re_p; /* pointer to (to be created) copy of compiled regex in re_compiled */
+#endif
 
   char c;     /* current char in pattern   */
   int i = 0;  /* index into pattern        */
@@ -246,11 +252,16 @@ re_t re_compile(const char* pattern)
   /* 'UNUSED' is a sentinel used to indicate end-of-pattern */
   re_compiled[j].type = UNUSED;
 
+#if defined(RE_ENABLE_MULTI_PATTERNS) && (RE_ENABLE_MULTI_PATTERNS == 1)
   re_p = (re_t)calloc(1, sizeof(re_compiled));
   memcpy(re_p, re_compiled, sizeof(re_compiled));
   return (re_t)re_p;
+#else
+  return (re_t)re_compiled;
+#endif
 }
 
+#if defined(RE_ENABLE_MULTI_PATTERNS) && (RE_ENABLE_MULTI_PATTERNS == 1)
 void re_freecompile(re_t pattern)
 {
   if (pattern)
@@ -259,6 +270,7 @@ void re_freecompile(re_t pattern)
     pattern = NULL;
   }
 }
+#endif
 
 void re_print(regex_t* pattern)
 {

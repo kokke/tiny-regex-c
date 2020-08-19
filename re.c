@@ -232,6 +232,12 @@ re_t re_compile(const char* pattern)
         re_compiled[j].ch = c;
       } break;
     }
+    /* no buffer-out-of-bounds access on invalid patterns - see https://github.com/kokke/tiny-regex-c/commit/1a279e04014b70b0695fba559a7c05d55e6ee90b */
+    if (pattern[i] == 0)
+    {
+      return 0;
+    }
+
     i += 1;
     j += 1;
   }

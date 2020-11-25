@@ -7,13 +7,6 @@ Design is inspired by Rob Pike's regex-code for the book *"Beautiful Code"* [ava
 
 Supports a subset of the syntax and semantics of the Python standard library implementation (the `re`-module).
 
-### Current status
-All supported regex-operators seem to work properly according to the test-set, with the following exception:
-
-There is a problem with ranges (e.g. `[0-9]` for a digit 0-9) combined with inverted character-cases, e.g. `[^ab]` for anything but 'a' or 'b' - like `[^-0-9]` for anything not '-' or a digit 0-9. I think the code matches too broadly in that case. 
-
-I think you should test the patterns you are going to use. You can easily modify the test-harness to generate tests for your intended patterns to check for compliance.
-
 **I will gladly accept patches correcting bugs.**
 
 ### Design goals
@@ -67,7 +60,6 @@ NOTE: inverted character classes are buggy - see the test harness for concrete e
   -  `?`         Question, match zero or one (non-greedy)
   -  `[abc]`     Character class, match if one of {'a', 'b', 'c'}
   -  `[^abc]`   Inverted class, match if NOT one of {'a', 'b', 'c'}
-  **`NOTE: This feature is currently broken for some usage of character ranges!`**
   -  `[a-zA-Z]` Character ranges, the character set of the ranges { a-z | A-Z }
   -  `\s`       Whitespace, \t \f \r \n \v and spaces
   -  `\S`       Non-whitespace

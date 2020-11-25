@@ -21,7 +21,7 @@ try:
     from future_builtins import map, range
 except:
     pass
-from re import sre_parse
+from re import match, sre_parse
 from itertools import product, chain, tee
 from random import choice,randint
 import string
@@ -30,8 +30,12 @@ __all__ = ('generate', 'CATEGORIES', 'count', 'parse', 'getone')
 
 CATEGORIES = {'category_space'  : sorted(sre_parse.WHITESPACE)
              ,'category_digit'  : sorted(sre_parse.DIGITS)
+             ,'category_not_digit'  : [chr(x) for x in range(32, 123) if
+                                       match('\D', chr(x))]
              ,'category_any'    : [chr(x) for x in range(32, 123)]
              ,'category_word'   : sorted( frozenset(string.ascii_letters + string.digits + "_") )
+             ,'category_not_word'  : [chr(x) for x in range(32, 123) if
+                                       match('\W', chr(x))]
              }
 
 def comb(g, i):

@@ -2085,13 +2085,13 @@ int main()
 
     printf("  matching on %lu bytes of test input: ", bufsizes[i]);
     fflush(stdout);
-    printf("%d \n", re_match(".+nonexisting.+", buf, &dummy)); 
+    printf("%d \n", re_match(".+nonexisting.+", buf, &dummy));
 
     buf[bufsizes[i]] = old;
   }
 
   printf("\n\n");
-    
+
   return 0;
 }
 

@@ -90,12 +90,12 @@ int re_matchp(re_t pattern, const char* text, int* matchlength)
       do
       {
         idx += 1;
-        
+
         if (matchpattern(pattern, text, matchlength))
         {
           if (text[0] == '\0')
             return -1;
-        
+
           return idx;
         }
       }
@@ -151,8 +151,8 @@ re_t re_compile(const char* pattern)
             case 's': {    re_compiled[j].type = WHITESPACE;       } break;
             case 'S': {    re_compiled[j].type = NOT_WHITESPACE;   } break;
 
-            /* Escaped character, e.g. '.' or '$' */ 
-            default:  
+            /* Escaped character, e.g. '.' or '$' */
+            default:
             {
               re_compiled[j].type = CHAR;
               re_compiled[j].ch = pattern[i];
@@ -162,7 +162,7 @@ re_t re_compile(const char* pattern)
         /* '\\' as last char in pattern -> invalid regular expression. */
 /*
         else
-        { 
+        {
           re_compiled[j].type = CHAR;
           re_compiled[j].ch = pattern[i];
         }
@@ -184,7 +184,7 @@ re_t re_compile(const char* pattern)
           {
             return 0;
           }
-        }  
+        }
         else
         {
           re_compiled[j].type = CHAR_CLASS;
@@ -356,7 +356,7 @@ static int matchcharclass(char c, const char* str)
       if (matchmetachar(c, str))
       {
         return 1;
-      } 
+      }
       else if ((c == str[0]) && !ismetachar(c))
       {
         return 1;
@@ -411,7 +411,7 @@ static int matchstar(regex_t p, regex_t* pattern, const char* text, int* matchle
       return 1;
     (*matchlength)--;
   }
-  
+
   *matchlength = prelen;
   return 0;
 }
@@ -430,7 +430,7 @@ static int matchplus(regex_t p, regex_t* pattern, const char* text, int* matchle
       return 1;
     (*matchlength)--;
   }
-  
+
   return 0;
 }
 

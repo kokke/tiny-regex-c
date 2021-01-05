@@ -15,7 +15,7 @@ int main(int argc, char** argv)
   else
   {
     printf("\nUsage: %s <PATTERN> \n", argv[0]);
-  }   
-  return -2; 
+  }
+  return -2;
 }
 

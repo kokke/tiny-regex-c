@@ -6,7 +6,7 @@
   the binary 'tests/test_rand' to check if the generated text also matches
   the regex-pattern in the C implementation.
   The exit-code of the testing program, is used to determine test success.
-  
+
   This script is called by the Makefile when doing 'make test'
 """
 

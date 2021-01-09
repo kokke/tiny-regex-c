@@ -1,3 +1,4 @@
+![CI](https://github.com/kokke/tiny-regex-c/workflows/CI/badge.svg)
 # tiny-regex-c
 # A small regex implementation in C
 ### Description

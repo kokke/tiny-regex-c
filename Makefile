@@ -50,7 +50,7 @@ test: all
 	@$(PYTHON) ./scripts/regex_test.py [^\\d]+\\s?[\\w]*          $(NRAND_TESTS)
 	@$(PYTHON) ./scripts/regex_test.py a+b*[ac]*.+.*.[\\.].       $(NRAND_TESTS)
 	@$(PYTHON) ./scripts/regex_test.py a?b[ac*]*.?[\\]+[?]?       $(NRAND_TESTS)
-	@#python ./scripts/regex_test.py [1-5-]+[-1-2]-[-]         $(NRAND_TESTS)
+	@$(PYTHON) ./scripts/regex_test.py [1-5-]+[-1-2]-[-]          $(NRAND_TESTS)
 	@$(PYTHON) ./scripts/regex_test.py [-1-3]-[-]+                $(NRAND_TESTS)
 	@$(PYTHON) ./scripts/regex_test.py [1-5]+[-1-2]-[\\-]         $(NRAND_TESTS)
 	@$(PYTHON) ./scripts/regex_test.py [-1-2]*                    $(NRAND_TESTS)
@@ -74,7 +74,7 @@ test: all
 	@$(PYTHON) ./scripts/regex_test.py \\d                        $(NRAND_TESTS)
 	@$(PYTHON) ./scripts/regex_test.py [\\d]                      $(NRAND_TESTS)
 	@$(PYTHON) ./scripts/regex_test.py [^\\d]                     $(NRAND_TESTS)
-	@#python ./scripts/regex_test.py [^-1-4]                    $(NRAND_TESTS)
+	@$(PYTHON) ./scripts/regex_test.py [^-1-4]                    $(NRAND_TESTS)
 	@echo
 	@echo
 	@echo

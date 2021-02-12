@@ -9,15 +9,14 @@ Steps:
 - Get the KLEE Docker image: ` $ sudo docker pull klee/klee `
 - Run the KLEE Docker image: ` $ sudo docker run --rm -ti --ulimit='stack=-1:-1' klee/klee `
 - NOTE: You should see a command prompt like this: ` klee@cc0c26c5b84c:~$ `
-- Fetch `re.h`: ` klee@cc0c26c5b84c:~$ wget https://raw.githubusercontents.com/kokke/tiny-regex-c/master/re.h . `
-- Fetch `re.c`: ` klee@cc0c26c5b84c:~$ wget https://raw.githubusercontents.com/kokke/tiny-regex-c/master/re.h . `
+- Fetch `re.h`: ` klee@cc0c26c5b84c:~$ wget https://raw.githubusercontent.com/kokke/tiny-regex-c/master/re.h `
+- Fetch `re.c`: ` klee@cc0c26c5b84c:~$ wget https://raw.githubusercontent.com/kokke/tiny-regex-c/master/re.c `
 - Run your favorite editor, and insert the code below in the bottom of `re.c`
 ```C
 /*
 tiny-regex KLEE test driver
 kindly contributed by @DavidKorczynski - see https://github.com/kokke/tiny-regex-c/issues/44
 */
-
 
 int main(int argc, char* argv[])
 {

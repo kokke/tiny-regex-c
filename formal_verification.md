@@ -1,6 +1,6 @@
 # Crude demo of formal verification
 
-Here is a crude demo of formal verification of tiny-regex. This is a hefty plagiat of @DavidKorczynski - see https://github.com/kokke/tiny-regex-c/issues/44 for more context.
+Here is a crude demo of formal verification of tiny-regex. This is a hefty plagiat of @DavidKorczynski - see https://www.youtube.com/watch?v=z6bsk-lsk1Q or https://github.com/kokke/tiny-regex-c/issues/44 for more context.
 
 I am using the KLEE symbolic execution engine and Docker here on a Debian-based platform.
 

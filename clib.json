@@ -1,0 +1,12 @@
+{
+  "name": "tiny-regex-c",
+  "version": "0.1.0",
+  "repo": "kokke/tiny-regex-c",
+  "keywords": ["tiny", "regex", "pcre"],
+  "license": "Public Domain",
+  "makefile": "Makefile",
+  "src": [
+    "re.h",
+    "re.c"
+  ]
+}

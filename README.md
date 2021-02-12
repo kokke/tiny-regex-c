@@ -18,7 +18,7 @@ The main design goal of this library is to be small, correct, self contained and
 - No use of dynamic memory allocation (i.e. no calls to `malloc` / `free`).
 - To avoid call-stack exhaustion, iterative searching is preferred over recursive by default (can be changed with a pre-processor flag).
 - No support for capturing groups or named capture: `(^P<name>group)` etc.
-- Thorough testing : [exrex](https://github.com/asciimoo/exrex) is used to randomly generate test-cases from regex patterns, which are fed into the regex code for verification. Try `make test` to generate a few thousand tests cases yourself.
+- Thorough testing : [exrex](https://github.com/asciimoo/exrex) is used to randomly generate test-cases from regex patterns, which are fed into the regex code for verification. Try `make test` to generate a few thousand tests cases yourself. `re_compile` has been checked by [KLEE](https://klee.github.io). See [https://github.com/kokke/tiny-regex-c/blob/master/formal_verification.md](formal_verification.md) for my crude attempt at that.
 - Provides character length of matches.
 - Compiled for x86 using GCC 7.2.0 and optimizing for size, the binary takes up ~2-3kb code space and allocates ~0.5kb RAM :
   ```

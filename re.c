@@ -47,7 +47,7 @@ typedef struct regex_t
   {
     unsigned char  ch;   /*      the character itself             */
     unsigned char* ccl;  /*  OR  a pointer to characters in class */
-  };
+  } u;
 } regex_t;
 
 
@@ -155,7 +155,7 @@ re_t re_compile(const char* pattern)
             default:
             {
               re_compiled[j].type = CHAR;
-              re_compiled[j].ch = pattern[i];
+              re_compiled[j].u.ch = pattern[i];
             } break;
           }
         }
@@ -222,14 +222,14 @@ re_t re_compile(const char* pattern)
         }
         /* Null-terminate string end */
         ccl_buf[ccl_bufidx++] = 0;
-        re_compiled[j].ccl = &ccl_buf[buf_begin];
+        re_compiled[j].u.ccl = &ccl_buf[buf_begin];
       } break;
 
       /* Other characters: */
       default:
       {
         re_compiled[j].type = CHAR;
-        re_compiled[j].ch = c;
+        re_compiled[j].u.ch = c;
       } break;
     }
     /* no buffer-out-of-bounds access on invalid patterns - see https://github.com/kokke/tiny-regex-c/commit/1a279e04014b70b0695fba559a7c05d55e6ee90b */
@@ -267,7 +267,7 @@ void re_print(regex_t* pattern)
       printf(" [");
       for (j = 0; j < MAX_CHAR_CLASS_LEN; ++j)
       {
-        c = pattern[i].ccl[j];
+        c = pattern[i].u.ccl[j];
         if ((c == '\0') || (c == ']'))
         {
           break;
@@ -278,7 +278,7 @@ void re_print(regex_t* pattern)
     }
     else if (pattern[i].type == CHAR)
     {
-      printf(" '%c'", pattern[i].ch);
+      printf(" '%c'", pattern[i].u.ch);
     }
     printf("\n");
   }
@@ -384,15 +384,15 @@ static int matchone(regex_t p, char c)
   switch (p.type)
   {
     case DOT:            return matchdot(c);
-    case CHAR_CLASS:     return  matchcharclass(c, (const char*)p.ccl);
-    case INV_CHAR_CLASS: return !matchcharclass(c, (const char*)p.ccl);
+    case CHAR_CLASS:     return  matchcharclass(c, (const char*)p.u.ccl);
+    case INV_CHAR_CLASS: return !matchcharclass(c, (const char*)p.u.ccl);
     case DIGIT:          return  matchdigit(c);
     case NOT_DIGIT:      return !matchdigit(c);
     case ALPHA:          return  matchalphanum(c);
     case NOT_ALPHA:      return !matchalphanum(c);
     case WHITESPACE:     return  matchwhitespace(c);
     case NOT_WHITESPACE: return !matchwhitespace(c);
-    default:             return  (p.ch == c);
+    default:             return  (p.u.ch == c);
   }
 }
 

@@ -75,7 +75,7 @@ KLEE: done: generated tests = 801298
 klee@cc0c26c5b84c:~$ 
 ```
 
-Similarly, the code below tests both `re_compile(...)` and `re_match(...)` which should be sufficient.
+Similarly, the code below tests both `re_compile(...)` and `re_match(...)` which should be sufficient for coverage of the core logic.
 Depending on your hardware, you should be able to increase the sizes of `pat` and `txt` to increase your confidence in the verification.
 
 
@@ -108,7 +108,7 @@ int main(int argc, char* argv[])
 }
 ```
 
-My modest hardware completes a check of a 7-char pattern and a 3-char text string in 20-30 minutes (size includes null-termination):
+My modest hardware (T420/i5-2520M@2.5GHz/8GB) completes a check of a 7-char pattern and a 3-char text string in 20-30 minutes (size includes null-termination):
 
 ```
 klee@780432c1aaae0:~$ clang -emit-llvm -g -c -O0 -Xclang -disable-O0-optnone re.c
@@ -137,3 +137,4 @@ user    19m38.438s
 sys     9m34.654s
 klee@780432c1aaae0:~$ 
 ```
+

@@ -31,6 +31,7 @@
 
 #include "re.h"
 #include <stdio.h>
+#include <ctype.h>
 
 /* Definitions: */
 
@@ -289,15 +290,15 @@ void re_print(regex_t* pattern)
 /* Private functions: */
 static int matchdigit(char c)
 {
-  return ((c >= '0') && (c <= '9'));
+  return isdigit(c);
 }
 static int matchalpha(char c)
 {
-  return ((c >= 'a') && (c <= 'z')) || ((c >= 'A') && (c <= 'Z'));
+  return isalpha(c);
 }
 static int matchwhitespace(char c)
 {
-  return ((c == ' ') || (c == '\t') || (c == '\n') || (c == '\r') || (c == '\f') || (c == '\v'));
+  return isspace(c);
 }
 static int matchalphanum(char c)
 {

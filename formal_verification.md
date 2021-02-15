@@ -4,6 +4,8 @@ Here is a crude demo of formal verification of tiny-regex. This is a hefty plagi
 
 I am using the [KLEE Symbolic Execution Engine](https://klee.github.io/) and their Docker image here on a Debian-based host.
 
+What this does, is mechanically try and prove the abscence of all run-time errors, memory corruption bugs and other problems by formally verifying that the code is working properly. We mark the inputs as being symbolic, so that the tool knows to use that as the "search space". That means KLEE checks all possible inputs of the form we give it.
+
 Steps:
 
 - Get the KLEE Docker image: ` $ sudo docker pull klee/klee `

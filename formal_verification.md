@@ -110,8 +110,7 @@ int main(int argc, char* argv[])
 }
 ```
 
-My modest hardware (T420/i5-2520M@2.5GHz/8GB) completes a check of a 7-char pattern and a 3-char text string in 20-30 minutes (size includes null-termination).
-whereas 8/5 takes +8 hours:
+My modest hardware (T420/i5-2520M@2.5GHz/8GB) completes a check of a 7-char pattern and a 3-char text string in 20-30 minutes (size includes null-termination), whereas 8/5 takes +8 hours:
 
 ```
 klee@780432c1aaae0:~$ clang -emit-llvm -g -c -O0 -Xclang -disable-O0-optnone re.c

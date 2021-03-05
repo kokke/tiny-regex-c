@@ -41,6 +41,15 @@ extern "C"{
 #endif
 
 
+typedef struct regex_t
+{
+  unsigned char  type;   /* CHAR, STAR, etc.                      */
+  union
+  {
+    unsigned char  ch;   /*      the character itself             */
+    unsigned char* ccl;  /*  OR  a pointer to characters in class */
+  } u;
+} regex_t;
 
 /* Typedef'd pointer to get abstract datatype. */
 typedef struct regex_t* re_t;

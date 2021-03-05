@@ -46,9 +46,11 @@ extern "C"{
 typedef struct regex_t* re_t;
 
 
-/* Compile regex string pattern to a regex_t-array. */
+/* Compile regex string pattern to a static regex_t-array. */
 re_t re_compile(const char* pattern);
 
+/* Compile regex string pattern to the given regex_t-array. */
+re_t re_compile_to(const char* pattern, re_t objects, unsigned char *ccl_buf);
 
 /* Find matches of the compiled pattern inside text. */
 int re_matchp(re_t pattern, const char* text, int* matchlength);

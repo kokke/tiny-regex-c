@@ -101,11 +101,12 @@ int main()
     int should_fail;
     int length;
     int correctlen;
-    size_t ntests = sizeof(test_vector) / sizeof(*test_vector);
+    size_t nvector_tests = sizeof(test_vector) / sizeof(*test_vector);
+    size_t ntests = nvector_tests + 1;
     size_t nfailed = 0;
     size_t i;
 
-    for (i = 0; i < ntests; ++i)
+    for (i = 0; i < nvector_tests; ++i)
     {
         pattern = test_vector[i][1];
         text = test_vector[i][2];
@@ -139,6 +140,21 @@ int main()
                 nfailed += 1;
             }
         }
+    }
+
+    // regression test for unhandled BEGIN in the middle of an expression
+    // we need to test text strings with all possible values for the second
+    // byte because re.c was matching it against an uninitalized value, so
+    // it could be anything
+    pattern = "a^";
+    for (i = 0; i < 255; i++) {
+      char text_buf[] = { 'a', i, '\0' };
+      int m = re_match(pattern, text_buf, &length);
+      if (m != -1) {
+        fprintf(stderr, "[%lu/%lu]: pattern '%s' matched '%s' unexpectedly", ntests, ntests, pattern, text_buf);
+        nfailed += 1;
+        break;
+      }
     }
 
     // printf("\n");

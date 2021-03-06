@@ -101,6 +101,7 @@ test: all
 	@$(PYTHON) ./scripts/regex_test_neg.py [012345-9]             $(NRAND_TESTS)
 	@$(PYTHON) ./scripts/regex_test_neg.py [0-56789]              $(NRAND_TESTS)
 	@$(PYTHON) ./scripts/regex_test_neg.py .*123faerdig           $(NRAND_TESTS)
+	@$(PYTHON) ./scripts/regex_test_neg.py a^                     $(NRAND_TESTS)
 	@echo
 	@echo
 	@./tests/test2

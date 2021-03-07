@@ -35,34 +35,16 @@
 
 /* Definitions: */
 
-<<<<<<< HEAD
-#define MAX_CHAR_CLASS_LEN      40    /* Max length of character-class buffer in.   */
-#ifndef CPROVER
-#define MAX_REGEXP_OBJECTS      30    /* Max number of regex symbols in expression. */
-#else
-#define MAX_REGEXP_OBJECTS      8    /* faster formal proofs */
-#endif
-=======
 #define MAX_REGEXP_LEN      70    /* Max number of bytes for a regex. */
->>>>>>> fd17b66 (use flat memory layout)
 
 
 enum regex_type_e { UNUSED, DOT, BEGIN, END, QUESTIONMARK, STAR, PLUS, CHAR, CHAR_CLASS, INV_CHAR_CLASS, DIGIT, NOT_DIGIT, ALPHA, NOT_ALPHA, WHITESPACE, NOT_WHITESPACE, /* BRANCH */ };
 
 typedef struct regex_t
 {
-<<<<<<< HEAD
-  enum regex_type_e type;   /* CHAR, STAR, etc.                      */
-  union
-  {
-    unsigned char  ch;   /*      the character itself             */
-    unsigned char* ccl;  /*  OR  a pointer to characters in class */
-  } u;
-=======
   unsigned char type;    /* CHAR, STAR, etc.                      */
   unsigned char data_len;
   unsigned char data[0];
->>>>>>> fd17b66 (use flat memory layout)
 } regex_t;
 
 static re_t getnext(regex_t* pattern)
@@ -186,16 +168,12 @@ re_t re_compile(const char* pattern)
         }
         /* '\\' as last char without previous \\ -> invalid regular expression. */
         else
-<<<<<<< HEAD
-          return 0;
-=======
         {
           re_compiled->type = CHAR;
           re_compiled->data_len = 1;
           re_compiled->data[0] = pattern[i];
         }
 */
->>>>>>> fd17b66 (use flat memory layout)
       } break;
 
       /* Character class: */
@@ -259,15 +237,9 @@ re_t re_compile(const char* pattern)
       /* Other characters: */
       default:
       {
-<<<<<<< HEAD
-        re_compiled[j].type = CHAR;
-        // cbmc: arithmetic overflow on signed to unsigned type conversion in (unsigned char)c
-        re_compiled[j].u.ch = (unsigned char)c;
-=======
         re_compiled->type = CHAR;
         re_compiled->data_len = 1;
-        re_compiled->data[0] = c;
->>>>>>> fd17b66 (use flat memory layout)
+        re_compiled->data[0] = (unsigned char)c;
       } break;
     }
     i += 1;
@@ -288,44 +260,29 @@ void re_print(regex_t* pattern)
 {
   const char *const types[] = { "UNUSED", "DOT", "BEGIN", "END", "QUESTIONMARK", "STAR", "PLUS", "CHAR", "CHAR_CLASS", "INV_CHAR_CLASS", "DIGIT", "NOT_DIGIT", "ALPHA", "NOT_ALPHA", "WHITESPACE", "NOT_WHITESPACE" /*, "BRANCH" */ };
 
-<<<<<<< HEAD
-  unsigned char i;
-  unsigned char j;
+  int j;
   char c;
 
   if (!pattern)
     return;
-  for (i = 0; i < MAX_REGEXP_OBJECTS; ++i)
-=======
-  int j;
-  char c;
   for (;; pattern = getnext(pattern))
->>>>>>> fd17b66 (use flat memory layout)
   {
     if (pattern->type == UNUSED)
     {
       break;
     }
 
-<<<<<<< HEAD
-    if (pattern[i].type <= NOT_WHITESPACE)
-      printf("type: %s", types[pattern[i].type]);
+    if (pattern->type <= NOT_WHITESPACE)
+      printf("type: %s", types[pattern->type]);
     else
-      printf("invalid type: %d", pattern[i].type);
+      printf("invalid type: %d", pattern->type);
 
-    if (pattern[i].type == CHAR_CLASS || pattern[i].type == INV_CHAR_CLASS)
-    {
-      printf(" [");
-      if (pattern[i].type == INV_CHAR_CLASS)
-        printf("^");
-      for (j = 0; j < MAX_CHAR_CLASS_LEN; ++j)
-=======
-    printf("type: %s", types[pattern->type]);
     if (pattern->type == CHAR_CLASS || pattern->type == INV_CHAR_CLASS)
     {
       printf(" [");
+      if (pattern->type == INV_CHAR_CLASS)
+        printf("^");
       for (j = 0; j < pattern->data_len; ++j)
->>>>>>> fd17b66 (use flat memory layout)
       {
         c = pattern->data[j];
         if ((c == '\0') || (c == ']'))
@@ -459,25 +416,9 @@ static int matchone(regex_t* p, char c)
   }
 }
 
-static int matchstar(regex_t* p, regex_t* pattern, const char* text, int* matchlength)
+static inline int matchstar(regex_t* p, regex_t* pattern, const char* text, int* matchlength)
 {
-  int prelen = *matchlength;
-  const char* prepoint = text;
-  // TODO check if multibyte, and use mbtowc() then
-  while ((text[0] != '\0') && matchone(p, *text))
-  {
-    text++;
-    (*matchlength)++;
-  }
-  while (text >= prepoint)
-  {
-    if (matchpattern(pattern, text--, matchlength))
-      return 1;
-    (*matchlength)--;
-  }
-
-  *matchlength = prelen;
-  return 0;
+  return matchplus(p, pattern, text, matchlength) || matchpattern(pattern, text, matchlength);
 }
 
 static int matchplus(regex_t* p, regex_t* pattern, const char* text, int* matchlength)
@@ -486,15 +427,14 @@ static int matchplus(regex_t* p, regex_t* pattern, const char* text, int* matchl
   while ((text[0] != '\0') && matchone(p, *text))
   {
     text++;
-    (*matchlength)++;
   }
-  while (text > prepoint)
+  for (; text > prepoint; text--)
   {
-    if (matchpattern(pattern, text--, matchlength))
+    if (matchpattern(pattern, text, matchlength)) {
+      *matchlength += text - prepoint;
       return 1;
-    (*matchlength)--;
+    }
   }
-
   return 0;
 }
 
@@ -512,43 +452,6 @@ static int matchquestion(regex_t *p, regex_t* pattern, const char* text, int* ma
   }
   return 0;
 }
-
-
-#if 0
-
-/* Recursive matching */
-static int matchpattern(regex_t* pattern, const char* text, int *matchlength)
-{
-  int pre = *matchlength;
-  if ((pattern[0].type == UNUSED) || (pattern[1].type == QUESTIONMARK))
-  {
-    return matchquestion(pattern[1], &pattern[2], text, matchlength);
-  }
-  else if (pattern[1].type == STAR)
-  {
-    return matchstar(pattern[0], &pattern[2], text, matchlength);
-  }
-  else if (pattern[1].type == PLUS)
-  {
-    return matchplus(pattern[0], &pattern[2], text, matchlength);
-  }
-  else if ((pattern[0].type == END) && pattern[1].type == UNUSED)
-  {
-    return text[0] == '\0';
-  }
-  else if ((text[0] != '\0') && matchone(pattern[0], text[0]))
-  {
-    (*matchlength)++;
-    return matchpattern(&pattern[1], text+1);
-  }
-  else
-  {
-    *matchlength = pre;
-    return 0;
-  }
-}
-
-#else
 
 /* Iterative matching */
 static int matchpattern(regex_t* pattern, const char* text, int* matchlength)
@@ -594,69 +497,3 @@ static int matchpattern(regex_t* pattern, const char* text, int* matchlength)
   *matchlength = pre;
   return 0;
 }
-
-#endif
-
-#ifdef CPROVER
-#define N 24
-
-/* Formal verification with cbmc: */
-/* cbmc -DCPROVER --64 --depth 200 --bounds-check --pointer-check --memory-leak-check --div-by-zero-check --signed-overflow-check --unsigned-overflow-check --pointer-overflow-check --conversion-check --undefined-shift-check --enum-range-check --pointer-primitive-check -trace re.c
- */
-
-void verify_re_compile()
-{
-  /* test input - ten chars used as a regex-pattern input */
-  char arr[N];
-  /* make input symbolic, to search all paths through the code */
-  /* i.e. the input is checked for all possible ten-char combinations */
-  for (int i=0; i<sizeof(arr)-1; i++) {
-    //arr[i] = nondet_char();
-    assume(arr[i] > -127 && arr[i] < 128);
-  }
-  /* assume proper NULL termination */
-  assume(arr[sizeof(arr) - 1] == 0);
-  /* verify abscence of run-time errors - go! */
-  re_compile(arr);
-}
-
-void verify_re_print()
-{
-  regex_t pattern[MAX_REGEXP_OBJECTS];
-  for (unsigned char i=0; i<MAX_REGEXP_OBJECTS; i++) {
-    //pattern[i].type = nondet_uchar();
-    assume(pattern[i].type >= 0 && pattern[i].type <= 255);
-    pattern[i].u.ccl = nondet_long();
-  }
-  re_print(&pattern);
-}
-
-void verify_re_match()
-{
-  int length;
-  regex_t pattern[MAX_REGEXP_OBJECTS];
-  char arr[N];
-
-  for (unsigned char i=0; i<MAX_REGEXP_OBJECTS; i++) {
-    //pattern[i].type = nondet_uchar();
-    //pattern[i].u.ch = nondet_int();
-    assume(pattern[i].type >= 0 && pattern[i].type <= 255);
-    assume(pattern[i].u.ccl >= 0 && pattern[i].u.ccl <= ~1);
-  }
-  for (int i=0; i<sizeof(arr)-1; i++) {
-    assume(arr[i] > -127 && arr[i] < 128);
-  }
-  /* assume proper NULL termination */
-  assume(arr[sizeof(arr) - 1] == 0);
-
-  re_match(&pattern, arr, &length);
-}
-
-int main(int argc, char* argv[])
-{
-  verify_re_compile();
-  verify_re_printh();
-  verify_re_match();
-  return 0;
-}
-#endif

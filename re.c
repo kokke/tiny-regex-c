@@ -407,23 +407,8 @@ static int matchone(regex_t p, char c)
 
 static int matchstar(regex_t p, regex_t* pattern, const char* text, int* matchlength)
 {
-  int prelen = *matchlength;
-  const char* prepoint = text;
-  // TODO check if multibyte, and use mbtowc() then
-  while ((text[0] != '\0') && matchone(p, *text))
-  {
-    text++;
-    (*matchlength)++;
-  }
-  while (text >= prepoint)
-  {
-    if (matchpattern(pattern, text--, matchlength))
-      return 1;
-    (*matchlength)--;
-  }
-
-  *matchlength = prelen;
-  return 0;
+  return matchplus(p, pattern, text, matchlength) ||
+         matchpattern(pattern, text, matchlength);
 }
 
 static int matchplus(regex_t p, regex_t* pattern, const char* text, int* matchlength)
@@ -432,15 +417,14 @@ static int matchplus(regex_t p, regex_t* pattern, const char* text, int* matchle
   while ((text[0] != '\0') && matchone(p, *text))
   {
     text++;
-    (*matchlength)++;
   }
-  while (text > prepoint)
+  for (; text > prepoint; text--)
   {
-    if (matchpattern(pattern, text--, matchlength))
+    if (matchpattern(pattern, text, matchlength)) {
+      *matchlength += text - prepoint;
       return 1;
-    (*matchlength)--;
+    }
   }
-
   return 0;
 }
 

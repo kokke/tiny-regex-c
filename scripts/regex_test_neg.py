@@ -64,7 +64,7 @@ while repeats >= 0:
     repeats -= 1
     example = gen_no_match(pattern)
     #print("%s %s %s" % (prog, pattern, example))
-    ret = call([prog, "\"%s\"" % pattern, "\"%s\"" % example])
+    ret = call([prog, pattern, example])
     if ret != 0:
       escaped = repr(example) # escapes special chars for better printing
       print("    FAIL : matches %s unexpectedly [%s]." % (escaped, ", ".join([("0x%02x" % ord(e)) for e in example]) ))

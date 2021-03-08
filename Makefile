@@ -16,27 +16,30 @@ PYTHON != if (python --version 2>&1 | grep -q 'Python 2\..*'); then \
 # Flags to pass to compiler
 CFLAGS := -O3 -Wall -Wextra -std=c99 -I.
 
-all:
-	@$(CC) $(CFLAGS) re.c tests/test1.c         -o tests/test1
-	@$(CC) $(CFLAGS) re.c tests/test2.c         -o tests/test2
-	@$(CC) $(CFLAGS) re.c tests/test_rand.c     -o tests/test_rand
-	@$(CC) $(CFLAGS) re.c tests/test_rand_neg.c -o tests/test_rand_neg
-	@$(CC) $(CFLAGS) re.c tests/test_compile.c  -o tests/test_compile
+all: bin/test1 bin/test2 bin/test_rand bin/test_rand_neg bin/test_compile
+
+bin/%: tests/%.c re.c
+	@mkdir -p bin
+	@$(CC) $(CFLAGS) re.c $< -o $@
 
 clean:
-	@rm -f tests/test1 tests/test2 tests/test_rand tests/test_compile
-	@#@$(foreach test_bin,$(TEST_BINS), rm -f $(test_bin) ; )
-	@rm -f a.out
-	@rm -f *.o
+	@rm -rf bin
 
+test: test1 test_compile test_rand test_rand_neg test2
 
-test: all
-	@$(test $(PYTHON))
+test1: bin/test1
 	@echo
 	@echo Testing hand-picked regex\'s:
-	@./tests/test1
+	@./bin/test1
+
+test_compile: bin/test_compile
+	@echo
 	@echo Testing handling of invalid regex patterns
-	@./tests/test_compile
+	@./bin/test_compile
+
+test_rand: bin/test_rand
+	@$(test $(PYTHON))
+	@echo
 	@echo Testing patterns against $(NRAND_TESTS) random strings matching the Python implementation and comparing:
 	@echo
 	@$(PYTHON) ./scripts/regex_test.py \\d+\\w?\\D\\d             $(NRAND_TESTS)
@@ -75,8 +78,9 @@ test: all
 	@$(PYTHON) ./scripts/regex_test.py [\\d]                      $(NRAND_TESTS)
 	@$(PYTHON) ./scripts/regex_test.py [^\\d]                     $(NRAND_TESTS)
 	@$(PYTHON) ./scripts/regex_test.py [^-1-4]                    $(NRAND_TESTS)
-	@echo
-	@echo
+
+test_rand_neg: bin/test_rand_neg
+	@$(test $(PYTHON))
 	@echo
 	@echo Testing rejection of patterns against $(NRAND_TESTS) random strings also rejected by the Python implementation:
 	@echo
@@ -101,9 +105,7 @@ test: all
 	@$(PYTHON) ./scripts/regex_test_neg.py [012345-9]             $(NRAND_TESTS)
 	@$(PYTHON) ./scripts/regex_test_neg.py [0-56789]              $(NRAND_TESTS)
 	@$(PYTHON) ./scripts/regex_test_neg.py .*123faerdig           $(NRAND_TESTS)
-	@echo
-	@echo
-	@./tests/test2
-	@echo
-	@echo
 
+test2: bin/test2
+	@echo
+	@./bin/test2

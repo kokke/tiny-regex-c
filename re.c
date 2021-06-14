@@ -35,21 +35,17 @@
 
 /* Definitions: */
 
+#ifndef MAX_REGEXP_OBJECTS
 #define MAX_REGEXP_OBJECTS      30    /* Max number of regex symbols in expression. */
+#endif
+
+#ifndef MAX_CHAR_CLASS_LEN
 #define MAX_CHAR_CLASS_LEN      40    /* Max length of character-class buffer in.   */
+#endif
 
 
 enum { UNUSED, DOT, BEGIN, END, QUESTIONMARK, STAR, PLUS, CHAR, CHAR_CLASS, INV_CHAR_CLASS, DIGIT, NOT_DIGIT, ALPHA, NOT_ALPHA, WHITESPACE, NOT_WHITESPACE, /* BRANCH */ };
 
-typedef struct regex_t
-{
-  unsigned char  type;   /* CHAR, STAR, etc.                      */
-  union
-  {
-    unsigned char  ch;   /*      the character itself             */
-    unsigned char* ccl;  /*  OR  a pointer to characters in class */
-  } u;
-} regex_t;
 
 
 
@@ -111,8 +107,13 @@ re_t re_compile(const char* pattern)
   /* The sizes of the two static arrays below substantiates the static RAM usage of this module.
      MAX_REGEXP_OBJECTS is the max number of symbols in the expression.
      MAX_CHAR_CLASS_LEN determines the size of buffer for chars in all char-classes in the expression. */
-  static regex_t re_compiled[MAX_REGEXP_OBJECTS];
-  static unsigned char ccl_buf[MAX_CHAR_CLASS_LEN];
+  static regex_t static_objects[MAX_REGEXP_OBJECTS];
+  static unsigned char static_ccl_buf[MAX_CHAR_CLASS_LEN];
+  return re_compile_to(pattern, static_objects, static_ccl_buf);
+}
+
+re_t re_compile_to(const char* pattern, regex_t *re_compiled, unsigned char *ccl_buf)
+{
   int ccl_bufidx = 1;
 
   char c;     /* current char in pattern   */

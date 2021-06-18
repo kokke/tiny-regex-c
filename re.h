@@ -36,6 +36,11 @@
 #define RE_DOT_MATCHES_NEWLINE 1
 #endif
 
+/* Define to Support for multiple patterns */
+#ifndef RE_ENABLE_MULTI_PATTERNS
+#define RE_ENABLE_MULTI_PATTERNS 0
+#endif
+
 #ifdef __cplusplus
 extern "C"{
 #endif
@@ -49,10 +54,13 @@ typedef struct regex_t* re_t;
 /* Compile regex string pattern to a regex_t-array. */
 re_t re_compile(const char* pattern);
 
-
 /* Find matches of the compiled pattern inside text. */
 int re_matchp(re_t pattern, const char* text, int* matchlength);
 
+/* Free memory of the compiled pattern */
+#if (RE_ENABLE_MULTI_PATTERNS == 1)
+void re_freecompile(re_t pattern);
+#endif
 
 /* Find matches of the txt pattern inside text (will compile automatically first). */
 int re_match(const char* pattern, const char* text, int* matchlength);

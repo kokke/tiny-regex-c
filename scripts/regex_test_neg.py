@@ -3,7 +3,7 @@
 """
   This program generates random text that matches a given regex-pattern.
   The pattern is given via sys.argv and the generated text is passed to
-  the binary 'tests/test_rand' to check if the generated text also matches
+  the binary 'bin/test_rand_neg' to check if the generated text also matches
   the regex-pattern in the C implementation.
   The exit-code of the testing program, is used to determine test success.
 
@@ -18,7 +18,7 @@ import random
 from subprocess import call
 
 
-prog = "./tests/test_rand_neg"
+prog = "./bin/test_rand_neg"
 
 if len(sys.argv) < 2:
   print("")

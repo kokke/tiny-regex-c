@@ -57,6 +57,13 @@ int re_matchp(re_t pattern, const char* text, int* matchlength);
 /* Find matches of the txt pattern inside text (will compile automatically first). */
 int re_match(const char* pattern, const char* text, int* matchlength);
 
+/* Return 1 if pattern match perfectly with text, 0 otherwise */
+int match_full(re_t pattern, const char* text);
+
+/* Return the number of occurence matched, 0 if there is not match 
+ * Accept a function to call at each success match with index and length of match
+ */
+ unsigned int match_times(re_t pattern, const char* text, void (*success_function)(int,int*));
 
 #ifdef __cplusplus
 }

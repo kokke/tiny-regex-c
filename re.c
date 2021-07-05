@@ -38,8 +38,10 @@
 #define MAX_REGEXP_OBJECTS      30    /* Max number of regex symbols in expression. */
 #define MAX_CHAR_CLASS_LEN      40    /* Max length of character-class buffer in.   */
 
+#define TYPES(T) T(UNUSED)T(DOT)T(BEGIN)T(END)T(QUESTIONMARK)T(STAR)T(PLUS)T(CHAR)T(CHAR_CLASS)T(INV_CHAR_CLASS)T(DIGIT)T(NOT_DIGIT)T(ALPHA)T(NOT_ALPHA)T(WHITESPACE)T(NOT_WHITESPACE)/*T(BRANCH)*/
 
-enum { UNUSED, DOT, BEGIN, END, QUESTIONMARK, STAR, PLUS, CHAR, CHAR_CLASS, INV_CHAR_CLASS, DIGIT, NOT_DIGIT, ALPHA, NOT_ALPHA, WHITESPACE, NOT_WHITESPACE, /* BRANCH */ };
+#define ENUM_MEMBER(Name) Name,
+enum { TYPES(ENUM_MEMBER) };
 
 typedef struct regex_t
 {
@@ -250,7 +252,8 @@ re_t re_compile(const char* pattern)
 
 void re_print(regex_t* pattern)
 {
-  const char* types[] = { "UNUSED", "DOT", "BEGIN", "END", "QUESTIONMARK", "STAR", "PLUS", "CHAR", "CHAR_CLASS", "INV_CHAR_CLASS", "DIGIT", "NOT_DIGIT", "ALPHA", "NOT_ALPHA", "WHITESPACE", "NOT_WHITESPACE", "BRANCH" };
+#define STRING_MEMBER(Name) #Name,
+  const char* types[] = { TYPES(STRING_MEMBER) };
 
   int i;
   int j;

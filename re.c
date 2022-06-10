@@ -15,7 +15,7 @@
  *   '+'        Plus, match one or more (greedy)
  *   '?'        Question, match zero or one (non-greedy)
  *   '[abc]'    Character class, match if one of {'a', 'b', 'c'}
- *   '[^abc]'   Inverted class, match if NOT one of {'a', 'b', 'c'} -- NOTE: feature is currently broken!
+ *   '[^abc]'   Inverted class, match if NOT one of {'a', 'b', 'c'}
  *   '[a-zA-Z]' Character ranges, the character set of the ranges { a-z | A-Z }
  *   '\s'       Whitespace, \t \f \r \n \v and spaces
  *   '\S'       Non-whitespace
@@ -43,11 +43,11 @@
 #endif
 
 
-enum { UNUSED, DOT, BEGIN, END, QUESTIONMARK, STAR, PLUS, CHAR, CHAR_CLASS, INV_CHAR_CLASS, DIGIT, NOT_DIGIT, ALPHA, NOT_ALPHA, WHITESPACE, NOT_WHITESPACE, /* BRANCH */ };
+enum regex_type_e { UNUSED, DOT, BEGIN, END, QUESTIONMARK, STAR, PLUS, CHAR, CHAR_CLASS, INV_CHAR_CLASS, DIGIT, NOT_DIGIT, ALPHA, NOT_ALPHA, WHITESPACE, NOT_WHITESPACE, /* BRANCH */ };
 
 typedef struct regex_t
 {
-  unsigned char  type;   /* CHAR, STAR, etc.                      */
+  enum regex_type_e type;   /* CHAR, STAR, etc.                      */
   union
   {
     unsigned char  ch;   /*      the character itself             */
@@ -270,6 +270,8 @@ void re_print(regex_t* pattern)
     if (pattern[i].type == CHAR_CLASS || pattern[i].type == INV_CHAR_CLASS)
     {
       printf(" [");
+      if (pattern[i].type == INV_CHAR_CLASS)
+        printf("^");
       for (j = 0; j < MAX_CHAR_CLASS_LEN; ++j)
       {
         c = pattern[i].u.ccl[j];

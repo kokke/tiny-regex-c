@@ -51,8 +51,6 @@ int  re_match(const char* pattern, const char* text, int* matchlength);
 ### Supported regex-operators
 The following features / regex-operators are supported by this library.
 
-NOTE: inverted character classes are buggy - see the test harness for concrete examples.
-
 
   -  `.`         Dot, matches any character
   -  `^`         Start anchor, matches beginning of string
@@ -104,10 +102,10 @@ if (match_idx != -1)
 For more usage examples I encourage you to look at the code in the `tests`-folder.
 
 ### TODO
-- Fix the implementation of inverted character classes.
 - Fix implementation of branches (`|`), and see if that can lead us closer to groups as well, e.g. `(a|b)+`.
 - Add `example.c` that demonstrates usage.
 - Add `tests/test_perf.c` for performance and time measurements.
+- Add optional multibyte support (e.g. UTF-8)
 - Testing: Improve pattern rejection testing.
 
 ### FAQ
@@ -118,6 +116,3 @@ For more usage examples I encourage you to look at the code in the `tests`-folde
 ### License
 All material in this repository is in the public domain.
 
-
-
- 

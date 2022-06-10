@@ -156,7 +156,7 @@ re_t re_compile(const char* pattern)
             case 's': {    re_compiled[j].type = WHITESPACE;       } break;
             case 'S': {    re_compiled[j].type = NOT_WHITESPACE;   } break;
 
-            /* Escaped character, e.g. '.' or '$' */
+              /* Escaped character, e.g. '.', '$' or '\\' */
             default:
             {
               re_compiled[j].type = CHAR;
@@ -164,14 +164,9 @@ re_t re_compile(const char* pattern)
             } break;
           }
         }
-        /* '\\' as last char in pattern -> invalid regular expression. */
-/*
+        /* '\\' as last char without previous \\ -> invalid regular expression. */
         else
-        {
-          re_compiled[j].type = CHAR;
-          re_compiled[j].ch = pattern[i];
-        }
-*/
+          return 0;
       } break;
 
       /* Character class: */

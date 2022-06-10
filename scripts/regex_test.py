@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 """
-  This program generates random text that matches a given regex-pattern.
+  This python2 program generates random text that matches a given regex-pattern.
   The pattern is given via sys.argv and the generated text is passed to
   the binary 'tests/test_rand' to check if the generated text also matches
   the regex-pattern in the C implementation.

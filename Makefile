@@ -9,7 +9,7 @@ PYTHON != if (python --version 2>&1 | grep -q 'Python 2\..*'); then \
           elif command -v python2 >/dev/null 2>&1; then             \
             echo 'python2';                                         \
           else                                                      \
-            echo 'Error: no compatible python version found.' >&2;  \
+            echo 'Error: no compatible python 2 version found.' >&2;  \
             exit 1;                                                 \
           fi
 

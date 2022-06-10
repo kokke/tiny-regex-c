@@ -4,6 +4,7 @@
 
 #include <stdio.h>
 #include <string.h>
+//#include <locale.h>
 #include "re.h"
 
 
@@ -90,6 +91,8 @@ char* test_vector[][4] =
   { NOK, "a\\",                       "a\\",              (char*) 0      },
   { NOK, "\\",                        "\\",               (char*) 0      },
   { OK,  "\\\\",                      "\\",               (char*) 1      },
+  // no multibyte support yet
+  //{ OK,  "\\w+",                      "Çüéâ",             (char*) 4      },
 };
 
 
@@ -105,6 +108,8 @@ int main()
     size_t ntests = sizeof(test_vector) / sizeof(*test_vector);
     size_t nfailed = 0;
     size_t i;
+
+    //setlocale(LC_CTYPE, "en_US.UTF-8");
 
     for (i = 0; i < ntests; ++i)
     {

@@ -296,15 +296,15 @@ void re_print(regex_t* pattern)
 /* Private functions: */
 static int matchdigit(char c)
 {
-  return isdigit(c);
+  return isdigit((unsigned char)c);
 }
 static int matchalpha(char c)
 {
-  return isalpha(c);
+  return isalpha((unsigned char)c);
 }
 static int matchwhitespace(char c)
 {
-  return isspace(c);
+  return isspace((unsigned char)c);
 }
 static int matchalphanum(char c)
 {
@@ -407,6 +407,7 @@ static int matchstar(regex_t p, regex_t* pattern, const char* text, int* matchle
 {
   int prelen = *matchlength;
   const char* prepoint = text;
+  // TODO check if multibyte, and use mbtowc() then
   while ((text[0] != '\0') && matchone(p, *text))
   {
     text++;

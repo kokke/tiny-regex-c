@@ -35,8 +35,12 @@
 
 /* Definitions: */
 
-#define MAX_REGEXP_OBJECTS      30    /* Max number of regex symbols in expression. */
 #define MAX_CHAR_CLASS_LEN      40    /* Max length of character-class buffer in.   */
+#ifndef CPROVER
+#define MAX_REGEXP_OBJECTS      30    /* Max number of regex symbols in expression. */
+#else
+#define MAX_REGEXP_OBJECTS      8    /* faster formal proofs */
+#endif
 
 
 enum { UNUSED, DOT, BEGIN, END, QUESTIONMARK, STAR, PLUS, CHAR, CHAR_CLASS, INV_CHAR_CLASS, DIGIT, NOT_DIGIT, ALPHA, NOT_ALPHA, WHITESPACE, NOT_WHITESPACE, /* BRANCH */ };
@@ -226,6 +230,9 @@ re_t re_compile(const char* pattern)
         re_compiled[j].u.ccl = &ccl_buf[buf_begin];
       } break;
 
+      case '\0': // EOL
+        return 0;
+
       /* Other characters: */
       default:
       {
@@ -234,12 +241,6 @@ re_t re_compile(const char* pattern)
         re_compiled[j].u.ch = (unsigned char)c;
       } break;
     }
-    /* no buffer-out-of-bounds access on invalid patterns - see https://github.com/kokke/tiny-regex-c/commit/1a279e04014b70b0695fba559a7c05d55e6ee90b */
-    if (pattern[i] == 0)
-    {
-      return 0;
-    }
-
     i += 1;
     j += 1;
   }
@@ -251,11 +252,14 @@ re_t re_compile(const char* pattern)
 
 void re_print(regex_t* pattern)
 {
-  const char* types[] = { "UNUSED", "DOT", "BEGIN", "END", "QUESTIONMARK", "STAR", "PLUS", "CHAR", "CHAR_CLASS", "INV_CHAR_CLASS", "DIGIT", "NOT_DIGIT", "ALPHA", "NOT_ALPHA", "WHITESPACE", "NOT_WHITESPACE" /*, "BRANCH" */ };
+  const char *const types[] = { "UNUSED", "DOT", "BEGIN", "END", "QUESTIONMARK", "STAR", "PLUS", "CHAR", "CHAR_CLASS", "INV_CHAR_CLASS", "DIGIT", "NOT_DIGIT", "ALPHA", "NOT_ALPHA", "WHITESPACE", "NOT_WHITESPACE" /*, "BRANCH" */ };
 
-  int i;
-  int j;
+  unsigned char i;
+  unsigned char j;
   char c;
+
+  if (!pattern)
+    return;
   for (i = 0; i < MAX_REGEXP_OBJECTS; ++i)
   {
     if (pattern[i].type == UNUSED)
@@ -538,32 +542,60 @@ static int matchpattern(regex_t* pattern, const char* text, int* matchlength)
 /* Formal verification with cbmc: */
 /* cbmc -DCPROVER --64 --depth 200 --bounds-check --pointer-check --memory-leak-check --div-by-zero-check --signed-overflow-check --unsigned-overflow-check --pointer-overflow-check --conversion-check --undefined-shift-check --enum-range-check --pointer-primitive-check -trace re.c
  */
-int main(int argc, char* argv[])
+
+void verify_re_compile()
 {
-  int length;
   /* test input - ten chars used as a regex-pattern input */
   char arr[N];
-  regex_t pattern[N];
-
   /* make input symbolic, to search all paths through the code */
   /* i.e. the input is checked for all possible ten-char combinations */
   for (int i=0; i<sizeof(arr)-1; i++) {
-      //arr[i] = nondet_char();
-      assume(arr[i] > -127 && arr[i] < 128);
+    //arr[i] = nondet_char();
+    assume(arr[i] > -127 && arr[i] < 128);
   }
   /* assume proper NULL termination */
   assume(arr[sizeof(arr) - 1] == 0);
   /* verify abscence of run-time errors - go! */
   re_compile(arr);
+}
 
-  for (int i=0; i<N; i++) {
-      pattern[i].type = nondet_uchar();
-      pattern[i].u.ch = nondet_int();
+void verify_re_print()
+{
+  regex_t pattern[MAX_REGEXP_OBJECTS];
+  for (unsigned char i=0; i<MAX_REGEXP_OBJECTS; i++) {
+    //pattern[i].type = nondet_uchar();
+    assume(pattern[i].type >= 0 && pattern[i].type <= 255);
+    pattern[i].u.ccl = nondet_long();
   }
   re_print(&pattern);
+}
+
+void verify_re_match()
+{
+  int length;
+  regex_t pattern[MAX_REGEXP_OBJECTS];
+  char arr[N];
+
+  for (unsigned char i=0; i<MAX_REGEXP_OBJECTS; i++) {
+    //pattern[i].type = nondet_uchar();
+    //pattern[i].u.ch = nondet_int();
+    assume(pattern[i].type >= 0 && pattern[i].type <= 255);
+    assume(pattern[i].u.ccl >= 0 && pattern[i].u.ccl <= ~1);
+  }
+  for (int i=0; i<sizeof(arr)-1; i++) {
+    assume(arr[i] > -127 && arr[i] < 128);
+  }
+  /* assume proper NULL termination */
+  assume(arr[sizeof(arr) - 1] == 0);
 
   re_match(&pattern, arr, &length);
+}
 
+int main(int argc, char* argv[])
+{
+  verify_re_compile();
+  verify_re_printh();
+  verify_re_match();
   return 0;
 }
 #endif

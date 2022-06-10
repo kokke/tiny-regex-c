@@ -109,5 +109,6 @@ test: all
 
 CBMC := cbmc
 
+# unwindset: loop max MAX_REGEXP_OBJECTS patterns
 verify:
-	$(CBMC) -DCPROVER --depth 200 --bounds-check --pointer-check --memory-leak-check --div-by-zero-check --signed-overflow-check --unsigned-overflow-check --pointer-overflow-check --conversion-check --undefined-shift-check --enum-range-check --pointer-primitive-check -trace $(CBMC_ARGS) re.c
+	$(CBMC) -DCPROVER --unwindset 8 --unwind 16 --depth 16 --bounds-check --pointer-check --memory-leak-check --div-by-zero-check --signed-overflow-check --unsigned-overflow-check --pointer-overflow-check --conversion-check --undefined-shift-check --enum-range-check $(CBMC_ARGS) re.c

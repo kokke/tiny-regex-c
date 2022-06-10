@@ -23,7 +23,9 @@
  *   '\W'       Non-alphanumeric
  *   '\d'       Digits, [0-9]
  *   '\D'       Non-digits
- *
+ * TODO:
+ *   ()         Groups
+ *   |          Or
  *
  */
 
@@ -31,11 +33,13 @@
 
 #include "re.h"
 #include <stdio.h>
+#include <string.h>
 #include <ctype.h>
 
 /* Definitions: */
 
-#define MAX_CHAR_CLASS_LEN      40    /* Max length of character-class buffer in.   */
+#define MAX_CHAR_CLASS_LEN      40    /* Max length of character-class buffer in. */
+#define MAX_GROUP_LEN           80    /* Max length of all grouped chars. */
 #ifndef CPROVER
 #define MAX_REGEXP_OBJECTS      30    /* Max number of regex symbols in expression. */
 #else
@@ -43,7 +47,7 @@
 #endif
 
 
-enum regex_type_e { UNUSED, DOT, BEGIN, END, QUESTIONMARK, STAR, PLUS, CHAR, CHAR_CLASS, INV_CHAR_CLASS, DIGIT, NOT_DIGIT, ALPHA, NOT_ALPHA, WHITESPACE, NOT_WHITESPACE, /* BRANCH */ };
+enum regex_type_e { UNUSED, DOT, BEGIN, END, QUESTIONMARK, STAR, PLUS, CHAR, CHAR_CLASS, INV_CHAR_CLASS, DIGIT, NOT_DIGIT, ALPHA, NOT_ALPHA, WHITESPACE, NOT_WHITESPACE, BRANCH, GROUP };
 
 typedef struct regex_t
 {
@@ -52,6 +56,7 @@ typedef struct regex_t
   {
     unsigned char  ch;   /*      the character itself             */
     unsigned char* ccl;  /*  OR  a pointer to characters in class */
+    char* group;         /*  OR  a pointer to a group */
   } u;
 } regex_t;
 
@@ -112,12 +117,17 @@ int re_matchp(re_t pattern, const char* text, int* matchlength)
 
 re_t re_compile(const char* pattern)
 {
-  /* The sizes of the two static arrays below substantiates the static RAM usage of this module.
+  /* The sizes of the three static arrays below substantiates the static RAM
+     usage of this module.
      MAX_REGEXP_OBJECTS is the max number of symbols in the expression.
-     MAX_CHAR_CLASS_LEN determines the size of buffer for chars in all char-classes in the expression. */
+     MAX_CHAR_CLASS_LEN determines the size of the buffer for chars in all
+       char-classes in the expression.
+     MAX_GROUP_LEN determines the size of the buffer for all grouped chars. */
   static regex_t re_compiled[MAX_REGEXP_OBJECTS];
   static unsigned char ccl_buf[MAX_CHAR_CLASS_LEN];
+  static char group_buf[MAX_GROUP_LEN];
   int ccl_bufidx = 1;
+  int group_bufidx = 0;
 
   char c;     /* current char in pattern   */
   int i = 0;  /* index into pattern        */
@@ -136,7 +146,21 @@ re_t re_compile(const char* pattern)
       case '*': {    re_compiled[j].type = STAR;            } break;
       case '+': {    re_compiled[j].type = PLUS;            } break;
       case '?': {    re_compiled[j].type = QUESTIONMARK;    } break;
-/*    case '|': {    re_compiled[j].type = BRANCH;          } break; <-- not working properly */
+      case '|': {    re_compiled[j].type = BRANCH;          } break;
+
+      case '(':
+      {
+        char *p = strchr(&pattern[i], ')');
+        if (p && *(p - 1) != '\\' && group_bufidx < p - &pattern[i])
+        {
+          re_compiled[j].type = GROUP;
+          memcpy(&group_buf[group_bufidx], &pattern[i], p - &pattern[i]);
+          re_compiled[j].u.group = &group_buf[group_bufidx];
+          group_bufidx += p - &pattern[i];
+          group_buf[group_bufidx] = '\0';
+        }
+        break;
+      }
 
       /* Escaped character-classes (\s \w ...): */
       case '\\':
@@ -247,7 +271,7 @@ re_t re_compile(const char* pattern)
 
 void re_print(regex_t* pattern)
 {
-  const char *const types[] = { "UNUSED", "DOT", "BEGIN", "END", "QUESTIONMARK", "STAR", "PLUS", "CHAR", "CHAR_CLASS", "INV_CHAR_CLASS", "DIGIT", "NOT_DIGIT", "ALPHA", "NOT_ALPHA", "WHITESPACE", "NOT_WHITESPACE" /*, "BRANCH" */ };
+  const char *const types[] = { "UNUSED", "DOT", "BEGIN", "END", "QUESTIONMARK", "STAR", "PLUS", "CHAR", "CHAR_CLASS", "INV_CHAR_CLASS", "DIGIT", "NOT_DIGIT", "ALPHA", "NOT_ALPHA", "WHITESPACE", "NOT_WHITESPACE", "BRANCH", "GROUP" };
 
   unsigned char i;
   unsigned char j;
@@ -262,7 +286,7 @@ void re_print(regex_t* pattern)
       break;
     }
 
-    if (pattern[i].type <= NOT_WHITESPACE)
+    if (pattern[i].type <= GROUP)
       printf("type: %s", types[pattern[i].type]);
     else
       printf("invalid type: %d", pattern[i].type);
@@ -504,13 +528,16 @@ static int matchpattern(regex_t* pattern, const char* text, int* matchlength)
     {
       return (text[0] == '\0');
     }
-/*  Branching is not working properly
-    else if (pattern[1].type == BRANCH)
+    else if (pattern[0].type == BRANCH && pattern[1].type != UNUSED)
     {
-      return (matchpattern(pattern, text) || matchpattern(&pattern[2], text));
+      return (matchpattern(pattern, text, matchlength) ||
+              matchpattern(&pattern[1], text, matchlength));
     }
-*/
-  (*matchlength)++;
+    else if (pattern[0].type == GROUP)
+    {
+      return matchpattern(re_compile(pattern[0].u.group), text, matchlength);
+    }
+    (*matchlength)++;
   }
   while ((text[0] != '\0') && matchone(*pattern++, *text++));
 

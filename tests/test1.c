@@ -93,6 +93,7 @@ char* test_vector[][4] =
   { NOK, "a\\",                       "a\\",              (char*) 0      },
   { NOK, "\\",                        "\\",               (char*) 0      },
   { OK,  "\\\\",                      "\\",               (char*) 1      },
+  { OK,  "0|1",                       "0",                (char*) 1      },
   // no multibyte support yet
   //{ OK,  "\\w+",                      "Çüéâ",             (char*) 4      },
 };

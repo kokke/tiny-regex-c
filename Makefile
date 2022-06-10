@@ -107,3 +107,7 @@ test: all
 	@echo
 	@echo
 
+CBMC := cbmc
+
+verify:
+	$(CBMC) -DCPROVER --64 --depth 200 --bounds-check --pointer-check --memory-leak-check --div-by-zero-check --signed-overflow-check --unsigned-overflow-check --pointer-overflow-check --conversion-check --undefined-shift-check --enum-range-check --pointer-primitive-check -trace $(CBMC_ARGS) re.c

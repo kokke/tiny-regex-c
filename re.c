@@ -230,7 +230,8 @@ re_t re_compile(const char* pattern)
       default:
       {
         re_compiled[j].type = CHAR;
-        re_compiled[j].u.ch = c;
+        // cbmc: arithmetic overflow on signed to unsigned type conversion in (unsigned char)c
+        re_compiled[j].u.ch = (unsigned char)c;
       } break;
     }
     /* no buffer-out-of-bounds access on invalid patterns - see https://github.com/kokke/tiny-regex-c/commit/1a279e04014b70b0695fba559a7c05d55e6ee90b */
@@ -525,4 +526,31 @@ static int matchpattern(regex_t* pattern, const char* text, int* matchlength)
   return 0;
 }
 
+#endif
+
+#ifdef CPROVER
+#define N 24
+
+/* Formal verification with cbmc: */
+/* cbmc -DCPROVER --64 --depth 200 --bounds-check --pointer-check --memory-leak-check --div-by-zero-check --signed-overflow-check --unsigned-overflow-check --pointer-overflow-check --conversion-check --undefined-shift-check --enum-range-check --pointer-primitive-check -trace re.c
+ */
+int main(int argc, char* argv[])
+{
+  /* test input - ten chars used as a regex-pattern input */
+  char arr[N];
+
+  /* make input symbolic, to search all paths through the code */
+  /* i.e. the input is checked for all possible ten-char combinations */
+  for (int i=0; i<sizeof(arr)-1; i++) {
+      //arr[i] = nondet_char();
+      assume(arr[i] > -127 && arr[i] < 128);
+  }
+  /* assume proper NULL termination */
+  assume(arr[sizeof(arr) - 1] == 0);
+
+  /* verify abscence of run-time errors - go! */
+  re_compile(arr);
+
+  return 0;
+}
 #endif

@@ -536,8 +536,10 @@ static int matchpattern(regex_t* pattern, const char* text, int* matchlength)
  */
 int main(int argc, char* argv[])
 {
+  int length;
   /* test input - ten chars used as a regex-pattern input */
   char arr[N];
+  regex_t pattern[N];
 
   /* make input symbolic, to search all paths through the code */
   /* i.e. the input is checked for all possible ten-char combinations */
@@ -547,9 +549,16 @@ int main(int argc, char* argv[])
   }
   /* assume proper NULL termination */
   assume(arr[sizeof(arr) - 1] == 0);
-
   /* verify abscence of run-time errors - go! */
   re_compile(arr);
+
+  for (int i=0; i<N; i++) {
+      pattern[i].type = nondet_uchar();
+      pattern[i].u.ch = nondet_int();
+  }
+  re_print(&pattern);
+
+  re_match(&pattern, arr, &length);
 
   return 0;
 }

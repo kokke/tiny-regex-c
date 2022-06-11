@@ -24,9 +24,11 @@
  *   '\d'       Digits, [0-9]
  *   '\D'       Non-digits
  * TODO:
- *   ()         Groups
- *   |          Or
+ *   '|'        Branch Or, e.g. a|A, \w|\s
+ *   '(...)'    Group
  *
+ * TODO:
+ *   multibyte support (mbtow, esp. UTF-8)
  */
 
 
@@ -60,13 +62,13 @@ typedef struct regex_t
   } u;
 } regex_t;
 
-
-
 /* Private function declarations: */
 static int matchpattern(regex_t* pattern, const char* text, int* matchlength);
 static int matchcharclass(char c, const char* str);
 static int matchstar(regex_t p, regex_t* pattern, const char* text, int* matchlength);
 static int matchplus(regex_t p, regex_t* pattern, const char* text, int* matchlength);
+static int matchquestion(regex_t p, regex_t* pattern, const char* text, int* matchlength);
+static int matchbranch(regex_t p, regex_t* pattern, const char* text, int* matchlength);
 static int matchone(regex_t p, char c);
 static int matchdigit(char c);
 static int matchalpha(char c);
@@ -75,7 +77,6 @@ static int matchmetachar(char c, const char* str);
 static int matchrange(char c, const char* str);
 static int matchdot(char c);
 static int ismetachar(char c);
-
 
 
 /* Public functions: */
@@ -103,7 +104,8 @@ int re_matchp(re_t pattern, const char* text, int* matchlength)
 
         if (matchpattern(pattern, text, matchlength))
         {
-          if (text[0] == '\0')
+          // empty branch matches null (i.e. ok, but *matchlength == 0)
+          if (*matchlength && text[0] == '\0')
             return -1;
 
           return idx;
@@ -457,7 +459,7 @@ static int matchquestion(regex_t p, regex_t* pattern, const char* text, int* mat
   if (p.type == UNUSED)
     return 1;
   if (matchpattern(pattern, text, matchlength))
-      return 1;
+    return 1;
   if (*text && matchone(p, *text++))
   {
     if (matchpattern(pattern, text, matchlength))
@@ -469,6 +471,23 @@ static int matchquestion(regex_t p, regex_t* pattern, const char* text, int* mat
   return 0;
 }
 
+static int matchbranch(regex_t p, regex_t* pattern, const char* text, int* matchlength)
+{
+  const char* prepoint = text;
+  if (p.type == UNUSED)
+    return 1;
+  if (*text && matchone(p, *text++))
+  {
+    (*matchlength)++;
+    return 1;
+  }
+  if (pattern->type == UNUSED)
+    // FIXME empty branch allows NULL text
+    return 1;
+  if (matchpattern(pattern, prepoint, matchlength))
+    return 1;
+  return 0;
+}
 
 #if 0
 
@@ -487,6 +506,10 @@ static int matchpattern(regex_t* pattern, const char* text, int *matchlength)
   else if (pattern[1].type == PLUS)
   {
     return matchplus(pattern[0], &pattern[2], text, matchlength);
+  }
+  else if (pattern[1].type == BRANCH)
+  {
+    return matchbranch(pattern[0], &pattern[2], text, matchlength);
   }
   else if ((pattern[0].type == END) && pattern[1].type == UNUSED)
   {
@@ -524,14 +547,13 @@ static int matchpattern(regex_t* pattern, const char* text, int* matchlength)
     {
       return matchplus(pattern[0], &pattern[2], text, matchlength);
     }
+    else if (pattern[1].type == BRANCH)
+    {
+      return matchbranch(pattern[0], &pattern[2], text, matchlength);
+    }
     else if ((pattern[0].type == END) && pattern[1].type == UNUSED)
     {
       return (text[0] == '\0');
-    }
-    else if (pattern[0].type == BRANCH && pattern[1].type != UNUSED)
-    {
-      return (matchpattern(pattern, text, matchlength) ||
-              matchpattern(&pattern[1], text, matchlength));
     }
     else if (pattern[0].type == GROUP)
     {

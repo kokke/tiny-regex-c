@@ -143,5 +143,5 @@ klee@780432c1aaae0:~$
 ----
 
 For the formal verifier CBMC just call make verify.
-This verifier is much faster and better than klee.
+This verifier is much faster than klee.
 https://www.cprover.org/cbmc/

@@ -102,14 +102,15 @@ if (match_idx != -1)
 For more usage examples I encourage you to look at the code in the `tests`-folder.
 
 ### TODO
-- Fix implementation of branches (`|`) (see the branch), and add groups as well, e.g. `(a|b)+`.
-- `re_match_capture()` with groups.
+- Fix implementation of groups, e.g. `(a|b)+`. See rurban's branch+group+times.
+- Add `{n}`, `{n,m}` quantifier support.
 - Add `example.c` that demonstrates usage.
 - Add `tests/test_perf.c` for performance and time measurements.
 - Add optional multibyte support (e.g. UTF-8). On non-wchar systems roll our own.
 - Word boundary: \b \B
 - non-greedy, lazy quantifiers (??, +?, *?, {n,m}?)
 - case-insensitive option or API. `re_matchi()`
+- `re_match_capture()` with groups.
 - '.' may not match '\r' nor '\n', unless a single-line option is given.
 - Testing: Improve pattern rejection testing.
 

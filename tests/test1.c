@@ -50,14 +50,17 @@ char* test_vector[][4] =
   { OK,  "[^fc]+",                    "abc def",          (char*) 2      },
   { OK,  "[^d\\sf]+",                 "abc def",          (char*) 3      },
   { OK,  "\n",                        "abc\ndef",         (char*) 1      },
-  { OK,  "b.\\s*\n",                  "aa\r\nbb\r\ncc\r\n\r\n",(char*) 4      },
+  { OK,  "b.\\s*\n",                  "aa\r\nbb\r\ncc\r\n\r\n",(char*) 4 },
   { OK,  ".*c",                       "abcabc",           (char*) 6      },
   { OK,  ".+c",                       "abcabc",           (char*) 6      },
   { OK,  "[b-z].*",                   "ab",               (char*) 1      },
   { OK,  "b[k-z]*",                   "ab",               (char*) 1      },
   { NOK, "[0-9]",                     "  - ",             (char*) 0      },
   { OK,  "[^0-9]",                    "  - ",             (char*) 1      },
-  { OK,  "0|",                        "0|",               (char*) 2      },
+  { OK,  "0|",                        "0",                (char*) 1      }, // 42
+  { OK,  "0|",                        "",                 (char*) 0      },
+  { OK,  "0|",                        "0|",               (char*) 1      },
+  { OK,  "^0|",                       "x0",               (char*) 0      },
   { NOK, "\\d\\d:\\d\\d:\\d\\d",      "0s:00:00",         (char*) 0      },
   { NOK, "\\d\\d:\\d\\d:\\d\\d",      "000:00",           (char*) 0      },
   { NOK, "\\d\\d:\\d\\d:\\d\\d",      "00:0000",          (char*) 0      },
@@ -94,6 +97,8 @@ char* test_vector[][4] =
   { NOK, "\\",                        "\\",               (char*) 0      },
   { OK,  "\\\\",                      "\\",               (char*) 1      },
   { OK,  "0|1",                       "0",                (char*) 1      },
+  { OK,  "[A-Z]|[0-9]",               "0",                (char*) 1      },
+  { OK,  "\\w|\\s",                   "_ ",               (char*) 1      },
   // no multibyte support yet
   //{ OK,  "\\w+",                      "Çüéâ",             (char*) 4      },
 };
@@ -119,7 +124,7 @@ int main()
         pattern = test_vector[i][1];
         text = test_vector[i][2];
         should_fail = (test_vector[i][0] == NOK);
-        correctlen = (int)(test_vector[i][3]);
+        correctlen = (int)(long)(test_vector[i][3]);
 
         int m = re_match(pattern, text, &length);
 

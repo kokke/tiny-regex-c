@@ -23,12 +23,12 @@
  *   '\W'       Non-alphanumeric
  *   '\d'       Digits, [0-9]
  *   '\D'       Non-digits
- * TODO:
  *   '|'        Branch Or, e.g. a|A, \w|\s
- *   '(...)'    Group
- *
+ *   '{n}'      Match n times
+ *   '{n,m}'    Match n to m times
  * TODO:
- *   multibyte support (mbtow, esp. UTF-8)
+ *   '(...)'    Group
+ *   multibyte support (mbtowc, esp. UTF-8)
  */
 
 
@@ -48,8 +48,10 @@
 #define MAX_REGEXP_OBJECTS      8    /* faster formal proofs */
 #endif
 
-
-enum regex_type_e { UNUSED, DOT, BEGIN, END, QUESTIONMARK, STAR, PLUS, CHAR, CHAR_CLASS, INV_CHAR_CLASS, DIGIT, NOT_DIGIT, ALPHA, NOT_ALPHA, WHITESPACE, NOT_WHITESPACE, BRANCH, GROUP };
+enum regex_type_e { UNUSED, DOT, BEGIN, END, QUESTIONMARK, STAR, PLUS, CHAR,
+                    CHAR_CLASS, INV_CHAR_CLASS, DIGIT, NOT_DIGIT, ALPHA,
+                    NOT_ALPHA, WHITESPACE, NOT_WHITESPACE, BRANCH, GROUP,
+                    TIMES, TIMES_NM };
 
 typedef struct regex_t
 {
@@ -59,6 +61,10 @@ typedef struct regex_t
     unsigned char  ch;   /*      the character itself             */
     unsigned char* ccl;  /*  OR  a pointer to characters in class */
     char* group;         /*  OR  a pointer to a group */
+    struct {
+      unsigned short n;
+      unsigned short m;
+    };
   } u;
 } regex_t;
 
@@ -69,6 +75,10 @@ static int matchstar(regex_t p, regex_t* pattern, const char* text, int* matchle
 static int matchplus(regex_t p, regex_t* pattern, const char* text, int* matchlength);
 static int matchquestion(regex_t p, regex_t* pattern, const char* text, int* matchlength);
 static int matchbranch(regex_t p, regex_t* pattern, const char* text, int* matchlength);
+//static int matchgroup(regex_t* p, regex_t* last_pattern, const char* text, int* matchlength);
+static int matchtimes(regex_t p, unsigned short n, const char* text, int* matchlength);
+static int matchtimes_nm(regex_t p, unsigned short n, unsigned short m,
+                         const char* text, int* matchlength);
 static int matchone(regex_t p, char c);
 static int matchdigit(char c);
 static int matchalpha(char c);
@@ -163,7 +173,34 @@ re_t re_compile(const char* pattern)
         }
         break;
       }
-
+      case '{':
+      {
+        unsigned short n, m;
+        if (2 != sscanf (&pattern[i], "{%hu,%hu}", &n, &m))
+        {
+          if (1 != sscanf (&pattern[i], "{%hu}", &re_compiled[j].u.n) ||
+              0 == re_compiled[j].u.n)
+            return 0;
+          else
+            re_compiled[j].type = TIMES;
+        }
+        else
+        {
+          if (n == 0 || m < n) // m must be greater-equal than n
+            return 0;
+          re_compiled[j].u.n = n;
+          if (m == n)
+            re_compiled[j].type = TIMES;
+          else
+          {
+            re_compiled[j].type = TIMES_NM;
+            re_compiled[j].u.m = m;
+          }
+        }
+        char *p = strchr (&pattern[i+1], '}');
+        i += (p - &pattern[i]);
+        break;
+      }
       /* Escaped character-classes (\s \w ...): */
       case '\\':
       {
@@ -273,7 +310,7 @@ re_t re_compile(const char* pattern)
 
 void re_print(regex_t* pattern)
 {
-  const char *const types[] = { "UNUSED", "DOT", "BEGIN", "END", "QUESTIONMARK", "STAR", "PLUS", "CHAR", "CHAR_CLASS", "INV_CHAR_CLASS", "DIGIT", "NOT_DIGIT", "ALPHA", "NOT_ALPHA", "WHITESPACE", "NOT_WHITESPACE", "BRANCH", "GROUP" };
+  const char *const types[] = { "UNUSED", "DOT", "BEGIN", "END", "QUESTIONMARK", "STAR", "PLUS", "CHAR", "CHAR_CLASS", "INV_CHAR_CLASS", "DIGIT", "NOT_DIGIT", "ALPHA", "NOT_ALPHA", "WHITESPACE", "NOT_WHITESPACE", "BRANCH", "GROUP", "TIMES", "TIMES_NM" };
 
   unsigned char i;
   unsigned char j;
@@ -288,7 +325,7 @@ void re_print(regex_t* pattern)
       break;
     }
 
-    if (pattern[i].type <= GROUP)
+    if (pattern[i].type <= TIMES_NM)
       printf("type: %s", types[pattern[i].type]);
     else
       printf("invalid type: %d", pattern[i].type);
@@ -313,11 +350,21 @@ void re_print(regex_t* pattern)
     {
       printf(" '%c'", pattern[i].u.ch);
     }
+    else if (pattern[i].type == GROUP)
+    {
+      printf(" (%s)", pattern[i].u.group);
+    }
+    else if (pattern[i].type == TIMES)
+    {
+      printf("{%hu}", pattern[i].u.n);
+    }
+    else if (pattern[i].type == TIMES_NM)
+    {
+      printf("{%hu,%hu}", pattern[i].u.n, pattern[i].u.m);
+    }
     printf("\n");
   }
 }
-
-
 
 /* Private functions: */
 static int matchdigit(char c)
@@ -418,7 +465,7 @@ static int matchone(regex_t p, char c)
 {
   switch (p.type)
   {
-    case DOT:            return matchdot(c);
+    case DOT:            return  matchdot(c);
     case CHAR_CLASS:     return  matchcharclass(c, (const char*)p.u.ccl);
     case INV_CHAR_CLASS: return !matchcharclass(c, (const char*)p.u.ccl);
     case DIGIT:          return  matchdigit(c);
@@ -471,6 +518,38 @@ static int matchquestion(regex_t p, regex_t* pattern, const char* text, int* mat
   return 0;
 }
 
+static int matchtimes(regex_t p, unsigned short n, const char* text, int* matchlength)
+{
+  unsigned short i = 0;
+  int pre = *matchlength;
+  /* Match the pattern n to m times */
+  while (*text && matchone(p, *text++) && i < n)
+  {
+    (*matchlength)++;
+    i++;
+  }
+  if (i == n)
+    return 1;
+  *matchlength = pre;
+  return 0;
+}
+
+static int matchtimes_nm(regex_t p, unsigned short n, unsigned short m, const char* text, int* matchlength)
+{
+  unsigned short i = 0;
+  int pre = *matchlength;
+  /* Match the pattern n to m times */
+  while (*text && matchone(p, *text++) && i < m)
+  {
+    (*matchlength)++;
+    i++;
+  }
+  if (i >= n && i <= m)
+    return 1;
+  *matchlength = pre;
+  return 0;
+}
+
 static int matchbranch(regex_t p, regex_t* pattern, const char* text, int* matchlength)
 {
   const char* prepoint = text;
@@ -506,6 +585,15 @@ static int matchpattern(regex_t* pattern, const char* text, int *matchlength)
   else if (pattern[1].type == PLUS)
   {
     return matchplus(pattern[0], &pattern[2], text, matchlength);
+  }
+  else if (pattern[1].type == TIMES)
+  {
+    return matchtimes(pattern[0], pattern[1].u.n, text, matchlength);
+  }
+  else if (pattern[1].type == TIMES_NM)
+  {
+    return matchtimes_nm(pattern[0], pattern[1].u.n, pattern[1].u.m, text,
+                        matchlength);
   }
   else if (pattern[1].type == BRANCH)
   {
@@ -546,6 +634,15 @@ static int matchpattern(regex_t* pattern, const char* text, int* matchlength)
     else if (pattern[1].type == PLUS)
     {
       return matchplus(pattern[0], &pattern[2], text, matchlength);
+    }
+    else if (pattern[1].type == TIMES)
+    {
+      return matchtimes(pattern[0], pattern[1].u.n, text, matchlength);
+    }
+    else if (pattern[1].type == TIMES_NM)
+    {
+      return matchtimes_nm(pattern[0], pattern[1].u.n, pattern[1].u.m, text,
+                           matchlength);
     }
     else if (pattern[1].type == BRANCH)
     {

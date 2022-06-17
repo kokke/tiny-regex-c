@@ -1,8 +1,6 @@
-# Compiler to use - can be replaced by clang for instance
-CC := gcc
-# Flags to pass to compiler
-CFLAGS := -O3 -Wall -Wextra -std=c99 -I.
-#CFLAGS := -g -Wall -Wextra -std=c99 -I.
+CC := cc
+CFLAGS := -O3 -Wall -Wextra
+#CFLAGS := -g -Wall -Wextra -std=c99 -DDEBUG
 
 # Number of random text expressions to generate, for random testing
 NRAND_TESTS := 1000
@@ -20,15 +18,15 @@ TEST_BINS = tests/test1 tests/test2 tests/test_compile tests/test_rand tests/tes
 all: $(TEST_BINS) 
 
 tests/test1: re.c tests/test1.c
-	@$(CC) $(CFLAGS) re.c tests/test1.c         -o $@
+	@$(CC) -I. $(CFLAGS) re.c tests/test1.c         -o $@
 tests/test2: re.c tests/test2.c
-	@$(CC) $(CFLAGS) re.c tests/test2.c         -o $@
+	@$(CC) -I. $(CFLAGS) re.c tests/test2.c         -o $@
 tests/test_compile: re.c tests/test_compile.c
-	@$(CC) $(CFLAGS) re.c tests/test_compile.c  -o $@
+	@$(CC) -I. $(CFLAGS) re.c tests/test_compile.c  -o $@
 tests/test_rand: re.c tests/test_rand.c
-	@$(CC) $(CFLAGS) re.c tests/test_rand.c     -o $@
+	@$(CC) -I. $(CFLAGS) re.c tests/test_rand.c     -o $@
 tests/test_rand_neg: re.c tests/test_rand_neg.c
-	@$(CC) $(CFLAGS) re.c tests/test_rand_neg.c -o $@
+	@$(CC) -I. $(CFLAGS) re.c tests/test_rand_neg.c -o $@
 
 clean:
 	@rm -f $(TEST_BINS)

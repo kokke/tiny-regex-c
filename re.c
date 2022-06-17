@@ -28,61 +28,73 @@
  *   '{n,}'     Match n or more times
  *   '{,m}'     Match m or less times
  *   '{n,m}'    Match n to m times
- * TODO:
- *   '(...)'    Group
- *   multibyte support (mbtowc, esp. UTF-8)
- */
 
+ * FIXME:
+ *   '(...)'    Group
+ *
+ * TODO:
+ *   multibyte support (mbtowc, esp. UTF-8. maybe hardcode UTF-8 without libc locale insanity)
+ */
 
 
 #include "re.h"
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>
+#ifdef _UNICODE
+#  include <stdlib.h>
+#  include <locale.h>
+#endif
 
 /* Definitions: */
 
 #define MAX_CHAR_CLASS_LEN      40    /* Max length of character-class buffer in. */
-#define MAX_GROUP_LEN           80    /* Max length of all grouped chars. */
 #ifndef CPROVER
 #define MAX_REGEXP_OBJECTS      30    /* Max number of regex symbols in expression. */
 #else
 #define MAX_REGEXP_OBJECTS      8    /* faster formal proofs */
 #endif
 
+#ifdef DEBUG
+#define DEBUG_P(...) fprintf(stderr, __VA_ARGS__)
+#else
+#define DEBUG_P(...)
+#endif
+
 enum regex_type_e { UNUSED, DOT, BEGIN, END, QUESTIONMARK, STAR, PLUS, CHAR,
                     CHAR_CLASS, INV_CHAR_CLASS, DIGIT, NOT_DIGIT, ALPHA,
-                    NOT_ALPHA, WHITESPACE, NOT_WHITESPACE, BRANCH, GROUP,
+                    NOT_ALPHA, WHITESPACE, NOT_WHITESPACE, BRANCH, GROUP, GROUPEND,
                     TIMES, TIMES_N, TIMES_M, TIMES_NM };
 
 typedef struct regex_t
 {
-  enum regex_type_e type;   /* CHAR, STAR, etc.                      */
+  enum regex_type_e type;     /* CHAR, STAR, etc.                      */
   union
   {
     char  ch;            /*      the character itself             */
     char* ccl;           /*  OR  a pointer to characters in class */
-    char* group;         /*  OR  a pointer to a group */
+    unsigned char  group_num;   /*  OR the number of group patterns. */
+    unsigned char  group_start; /*  OR for GROUPEND, the start index of the group. */
     struct {
-      unsigned short n;
-      unsigned short m;
+      unsigned short n;  /* match n times */
+      unsigned short m;  /* match n to m times */
     };
   } u;
 } regex_t;
 
 /* Private function declarations: */
-static int matchpattern(regex_t* pattern, const char* text, int* matchlength);
+static int matchpattern(regex_t* pattern, const char* text, int* matchlength, int *num_patterns);
 static int matchcharclass(char c, const char* str);
 static int matchstar(regex_t p, regex_t* pattern, const char* text, int* matchlength);
 static int matchplus(regex_t p, regex_t* pattern, const char* text, int* matchlength);
 static int matchquestion(regex_t p, regex_t* pattern, const char* text, int* matchlength);
 static int matchbranch(regex_t p, regex_t* pattern, const char* text, int* matchlength);
-//static int matchgroup(regex_t* p, regex_t* last_pattern, const char* text, int* matchlength);
 static int matchtimes(regex_t p, unsigned short n, const char* text, int* matchlength);
 static int matchtimes_n(regex_t p, unsigned short n, const char* text, int* matchlength);
 static int matchtimes_m(regex_t p, unsigned short m, const char* text, int* matchlength);
 static int matchtimes_nm(regex_t p, unsigned short n, unsigned short m,
                          const char* text, int* matchlength);
+static int matchgroup(regex_t* p, const char* text, int* matchlength);
 static int matchone(regex_t p, char c);
 static int matchdigit(char c);
 static int matchalpha(char c);
@@ -101,12 +113,13 @@ int re_match(const char* pattern, const char* text, int* matchlength)
 
 int re_matchp(re_t pattern, const char* text, int* matchlength)
 {
+  int num_patterns = 0;
   *matchlength = 0;
   if (pattern != 0)
   {
     if (pattern[0].type == BEGIN)
     {
-      return ((matchpattern(&pattern[1], text, matchlength)) ? 0 : -1);
+      return ((matchpattern(&pattern[1], text, matchlength, &num_patterns)) ? 0 : -1);
     }
     else
     {
@@ -116,7 +129,7 @@ int re_matchp(re_t pattern, const char* text, int* matchlength)
       {
         idx += 1;
 
-        if (matchpattern(pattern, text, matchlength))
+        if (matchpattern(pattern, text, matchlength, &num_patterns))
         {
           // empty branch matches null (i.e. ok, but *matchlength == 0)
           if (*matchlength && text[0] == '\0')
@@ -137,13 +150,10 @@ re_t re_compile(const char* pattern)
      usage of this module.
      MAX_REGEXP_OBJECTS is the max number of symbols in the expression.
      MAX_CHAR_CLASS_LEN determines the size of the buffer for chars in all
-       char-classes in the expression.
-     MAX_GROUP_LEN determines the size of the buffer for all grouped chars. */
+       char-classes in the expression. */
   static regex_t re_compiled[MAX_REGEXP_OBJECTS];
   static char ccl_buf[MAX_CHAR_CLASS_LEN];
-  static char group_buf[MAX_GROUP_LEN];
   int ccl_bufidx = 1;
-  int group_bufidx = 0;
 
   char c;     /* current char in pattern   */
   int i = 0;  /* index into pattern        */
@@ -184,15 +194,41 @@ re_t re_compile(const char* pattern)
 
       case '(':
       {
-        char *p = strchr(&pattern[i], ')');
-        if (p && *(p - 1) != '\\' && group_bufidx < p - &pattern[i])
+        char *p = strrchr(&pattern[i], ')');
+        if (p && *(p - 1) != '\\')
         {
           re_compiled[j].type = GROUP;
-          memcpy(&group_buf[group_bufidx], &pattern[i], p - &pattern[i]);
-          re_compiled[j].u.group = &group_buf[group_bufidx];
-          group_bufidx += p - &pattern[i];
-          group_buf[group_bufidx] = '\0';
+          re_compiled[j].u.group_num = 0;
         }
+        /* '(' without matching ')' */
+        else
+          return 0;
+        break;
+      }
+      case ')':
+      {
+        int nestlevel = 0;
+        int k = j;
+        /* search back to next innermost groupstart */
+        for (; k >= 0; k--)
+        {
+          if (k < j && re_compiled[k].type == GROUPEND)
+            nestlevel++;
+          else if (re_compiled[k].type == GROUP)
+          {
+            if (nestlevel == 0)
+            {
+              re_compiled[k].u.group_num = j - k - 1;
+              re_compiled[j].type = GROUPEND;
+              re_compiled[j].u.group_start = k; // index of group
+              break;
+            }
+            nestlevel--;
+          }
+        }
+        /* ')' without matching '(' */
+        if (k < 0)
+          return 0;
         break;
       }
       case '{':
@@ -356,10 +392,12 @@ re_t re_compile(const char* pattern)
 
 void re_print(regex_t* pattern)
 {
-  const char *const types[] = { "UNUSED", "DOT", "BEGIN", "END", "QUESTIONMARK", "STAR", "PLUS", "CHAR", "CHAR_CLASS", "INV_CHAR_CLASS", "DIGIT", "NOT_DIGIT", "ALPHA", "NOT_ALPHA", "WHITESPACE", "NOT_WHITESPACE", "BRANCH", "GROUP", "TIMES", "TIMES_N", "TIMES_M", "TIMES_NM" };
+  const char *const types[] = { "UNUSED", "DOT", "BEGIN", "END", "QUESTIONMARK", "STAR", "PLUS", "CHAR", "CHAR_CLASS", "INV_CHAR_CLASS", "DIGIT", "NOT_DIGIT", "ALPHA", "NOT_ALPHA", "WHITESPACE", "NOT_WHITESPACE", "BRANCH", "GROUP", "GROUPEND", "TIMES", "TIMES_N", "TIMES_M", "TIMES_NM" };
+
 
   unsigned char i;
   unsigned char j;
+  unsigned char group_end = 0;
   char c;
 
   if (!pattern)
@@ -371,6 +409,8 @@ void re_print(regex_t* pattern)
       break;
     }
 
+    //if (group_end && i == group_end)
+    //  printf("      )\n");
     if (pattern[i].type <= TIMES_NM)
       printf("type: %s", types[pattern[i].type]);
     else
@@ -396,10 +436,6 @@ void re_print(regex_t* pattern)
     {
       printf(" '%c'", pattern[i].u.ch);
     }
-    else if (pattern[i].type == GROUP)
-    {
-      printf(" (%s)", pattern[i].u.group);
-    }
     else if (pattern[i].type == TIMES)
     {
       printf("{%hu}", pattern[i].u.n);
@@ -415,6 +451,17 @@ void re_print(regex_t* pattern)
     else if (pattern[i].type == TIMES_NM)
     {
       printf("{%hu,%hu}", pattern[i].u.n, pattern[i].u.m);
+    }
+    else if (pattern[i].type == GROUP)
+    {
+      group_end = i + pattern[i].u.group_num;
+      if (group_end >= MAX_REGEXP_OBJECTS)
+        return;
+      printf(" (");
+    }
+    else if (pattern[i].type == GROUPEND)
+    {
+      printf(" )");
     }
     printf("\n");
   }
@@ -481,6 +528,7 @@ static int matchcharclass(char c, const char* str)
   {
     if (matchrange(c, str))
     {
+      DEBUG_P("%c matches %s\n", c, str);
       return 1;
     }
     else if (str[0] == '\\')
@@ -512,11 +560,13 @@ static int matchcharclass(char c, const char* str)
   }
   while (*str++ != '\0');
 
+  DEBUG_P("%c did not match prev. ccl\n", c);
   return 0;
 }
 
 static int matchone(regex_t p, char c)
 {
+  DEBUG_P("ONE %d matches %c?\n", p.type, c);
   switch (p.type)
   {
     case DOT:            return  matchdot(c);
@@ -528,44 +578,62 @@ static int matchone(regex_t p, char c)
     case NOT_ALPHA:      return !matchalphanum(c);
     case WHITESPACE:     return  matchwhitespace(c);
     case NOT_WHITESPACE: return !matchwhitespace(c);
+    case GROUPEND:       return  1;
     default:             return  (p.u.ch == c);
   }
 }
 
 static int matchstar(regex_t p, regex_t* pattern, const char* text, int* matchlength)
 {
+  int num_patterns = 0;
   return matchplus(p, pattern, text, matchlength) ||
-         matchpattern(pattern, text, matchlength);
+         matchpattern(pattern, text, matchlength, &num_patterns);
 }
 
 static int matchplus(regex_t p, regex_t* pattern, const char* text, int* matchlength)
 {
+  int num_patterns = 0;
   const char* prepoint = text;
   while ((text[0] != '\0') && matchone(p, *text))
   {
+    DEBUG_P("+ matches %s\n", text);
     text++;
   }
   for (; text > prepoint; text--)
   {
-    if (matchpattern(pattern, text, matchlength)) {
+    if (matchpattern(pattern, text, matchlength, &num_patterns))
+    {
       *matchlength += text - prepoint;
       return 1;
     }
+    DEBUG_P("+ pattern does not match %s\n", &text[1]);
   }
+  DEBUG_P("+ pattern did not match %s\n", prepoint);
   return 0;
 }
 
 static int matchquestion(regex_t p, regex_t* pattern, const char* text, int* matchlength)
 {
+  int num_patterns = 0;
   if (p.type == UNUSED)
     return 1;
-  if (matchpattern(pattern, text, matchlength))
+  if (matchpattern(pattern, text, matchlength, &num_patterns))
+  {
+#ifdef DEBUG
+    re_print(pattern);
+    DEBUG_P("? matched %s\n", text);
+#endif
     return 1;
+  }
   if (*text && matchone(p, *text++))
   {
-    if (matchpattern(pattern, text, matchlength))
+    if (matchpattern(pattern, text, matchlength, &num_patterns))
     {
       (*matchlength)++;
+#ifdef DEBUG
+      re_print(pattern);
+      DEBUG_P("? matched %s\n", text);
+#endif
       return 1;
     }
   }
@@ -634,43 +702,81 @@ static int matchtimes_nm(regex_t p, unsigned short n, unsigned short m, const ch
 
 static int matchbranch(regex_t p, regex_t* pattern, const char* text, int* matchlength)
 {
+  int num_patterns = 0;
   const char* prepoint = text;
   if (p.type == UNUSED)
     return 1;
+  /* Match the current p (previous) */
   if (*text && matchone(p, *text++))
   {
     (*matchlength)++;
     return 1;
   }
   if (pattern->type == UNUSED)
-    // FIXME empty branch allows NULL text
+    // empty branch "0|" allows NULL text
     return 1;
-  if (matchpattern(pattern, prepoint, matchlength))
+  /* or the next branch */
+  if (matchpattern(pattern, prepoint, matchlength, &num_patterns))
     return 1;
   return 0;
 }
 
-#if 0
+static int matchgroup(regex_t* p, const char* text, int* matchlength)
+{
+  int pre = *matchlength;
+  int num_patterns = 0, length = pre;
+  const regex_t* groupend = &p[p->u.group_num + 1];
+  DEBUG_P("does GROUP (%u) match %s?\n", (unsigned)p->u.group_num, text);
+  p++;
+  while (p < groupend)
+  {
+    if (p->type == UNUSED) // only with invalid external compiles
+      return 0;
+    if (!matchpattern(p, text, &length, &num_patterns))
+    {
+      DEBUG_P("GROUP did not match %.*s (len %d, patterns %d)\n", length, text-*matchlength, *matchlength, num_patterns);
+      *matchlength = pre;
+      return 0;
+    }
+    DEBUG_P("GROUP did match %.*s (len %d, patterns %d)\n", length, text-*matchlength, *matchlength, num_patterns);
+    text += length;
+    p += num_patterns;
+    *matchlength += length;
+  }
+  DEBUG_P("ENDGROUP did match %s (len %d, patterns %d)\n", text-*matchlength, *matchlength, num_patterns);
+  return 1;
+}
+
+#ifdef RECURSIVE_RE
 
 /* Recursive matching */
-static int matchpattern(regex_t* pattern, const char* text, int *matchlength)
+static int matchpattern(regex_t* pattern, const char* text, int *matchlength, int *num_patterns)
 {
   int pre = *matchlength;
   if ((pattern[0].type == UNUSED) || (pattern[1].type == QUESTIONMARK))
   {
     return matchquestion(pattern[1], &pattern[2], text, matchlength);
   }
+  else if (pattern[0].type == GROUPEND)
+  {
+    (*num_patterns)++;
+    DEBUG_P("GROUPEND matches %s (len %d, patterns %d)\n", text-*matchlength, *matchlength, *num_patterns);
+    return 1;
+  }
   else if (pattern[1].type == STAR)
   {
-    return matchstar(pattern[0], &pattern[2], text, matchlength);
+    int i = (pattern[1].type == GROUPEND) ? pattern[1].u.group_start : 0;
+    return matchstar(pattern[i], &pattern[2], text, matchlength);
   }
   else if (pattern[1].type == PLUS)
   {
-    return matchplus(pattern[0], &pattern[2], text, matchlength);
+    int i = (pattern[1].type == GROUPEND) ? pattern[1].u.group_start : 0;
+    return matchplus(pattern[i], &pattern[2], text, matchlength);
   }
   else if (pattern[1].type == TIMES)
   {
-    return matchtimes(pattern[0], pattern[1].u.n, text, matchlength);
+    int i = (pattern[1].type == GROUPEND) ? pattern[1].u.group_start : 0;
+    return matchtimes(pattern[i], pattern[1].u.n, text, matchlength);
   }
   else if (pattern[1].type == TIMES_N)
   {
@@ -682,21 +788,29 @@ static int matchpattern(regex_t* pattern, const char* text, int *matchlength)
   }
   else if (pattern[1].type == TIMES_NM)
   {
-    return matchtimes_nm(pattern[0], pattern[1].u.n, pattern[1].u.m, text,
-                        matchlength);
+    int i = (pattern[1].type == GROUPEND) ? pattern[1].u.group_start : 0;
+    return matchtimes_nm(pattern[i], pattern[1].u.n, pattern[1].u.m, text,
+                         matchlength);
   }
   else if (pattern[1].type == BRANCH)
   {
-    return matchbranch(pattern[0], &pattern[2], text, matchlength);
+    int i = (pattern[1].type == GROUPEND) ? pattern[1].u.group_start : 0;
+    return matchbranch(pattern[i], &pattern[2], text, matchlength);
+  }
+  else if (pattern[0].type == GROUP)
+  {
+    *num_patterns = pattern[0].u.group_num + 1; // plus GROUPEND
+    return matchgroup(&pattern[0], text, matchlength);
   }
   else if ((pattern[0].type == END) && pattern[1].type == UNUSED)
   {
     return text[0] == '\0';
   }
-  else if ((text[0] != '\0') && matchone(pattern[0], text[0]))
+  else if ((text[0] != '\0') && matchone(*pattern, text[0]))
   {
     (*matchlength)++;
-    return matchpattern(&pattern[1], text+1);
+    (*num_patterns)++;
+    return matchpattern(&pattern[1], text+1, matchlength, num_patterns);
   }
   else
   {
@@ -708,26 +822,31 @@ static int matchpattern(regex_t* pattern, const char* text, int *matchlength)
 #else
 
 /* Iterative matching */
-static int matchpattern(regex_t* pattern, const char* text, int* matchlength)
+static int matchpattern(regex_t* pattern, const char* text, int* matchlength, int *num_patterns)
 {
   int pre = *matchlength;
   do
   {
     if ((pattern[0].type == UNUSED) || (pattern[1].type == QUESTIONMARK))
     {
-      return matchquestion(pattern[0], &pattern[2], text, matchlength);
+      int i = (pattern[1].type == GROUPEND) ? pattern[1].u.group_start : 0;
+      return matchquestion(pattern[i], &pattern[2], text, matchlength);
     }
     else if (pattern[1].type == STAR)
     {
-      return matchstar(pattern[0], &pattern[2], text, matchlength);
+      int i = (pattern[1].type == GROUPEND) ? pattern[1].u.group_start : 0;
+      return matchstar(pattern[i], &pattern[2], text, matchlength);
     }
     else if (pattern[1].type == PLUS)
     {
-      return matchplus(pattern[0], &pattern[2], text, matchlength);
+      DEBUG_P("PLUS match %s?\n", text);
+      int i = (pattern[1].type == GROUPEND) ? pattern[1].u.group_start : 0;
+      return matchplus(pattern[i], &pattern[2], text, matchlength);
     }
     else if (pattern[1].type == TIMES)
     {
-      return matchtimes(pattern[0], pattern[1].u.n, text, matchlength);
+      int i = (pattern[1].type == GROUPEND) ? pattern[1].u.group_start : 0;
+      return matchtimes(pattern[i], pattern[1].u.n, text, matchlength);
     }
     else if (pattern[1].type == TIMES_N)
     {
@@ -739,22 +858,32 @@ static int matchpattern(regex_t* pattern, const char* text, int* matchlength)
     }
     else if (pattern[1].type == TIMES_NM)
     {
-      return matchtimes_nm(pattern[0], pattern[1].u.n, pattern[1].u.m, text,
+      int i = (pattern[1].type == GROUPEND) ? pattern[1].u.group_start : 0;
+      return matchtimes_nm(pattern[i], pattern[1].u.n, pattern[1].u.m, text,
                            matchlength);
     }
     else if (pattern[1].type == BRANCH)
     {
-      return matchbranch(pattern[0], &pattern[2], text, matchlength);
+      int i = (pattern[1].type == GROUPEND) ? pattern[1].u.group_start : 0;
+      return matchbranch(pattern[i], &pattern[2], text, matchlength);
+    }
+    else if (pattern[0].type == GROUPEND)
+    {
+      (*num_patterns)++;
+      DEBUG_P("GROUPEND matches %.*s (len %d, patterns %d)\n", *matchlength, text-*matchlength, *matchlength, *num_patterns);
+      return 1;
+    }
+    else if (pattern[0].type == GROUP)
+    {
+      *num_patterns = pattern[0].u.group_num + 1; // plus GROUPEND
+      return matchgroup(&pattern[0], text, matchlength);
     }
     else if ((pattern[0].type == END) && pattern[1].type == UNUSED)
     {
       return (text[0] == '\0');
     }
-    else if (pattern[0].type == GROUP)
-    {
-      return matchpattern(re_compile(pattern[0].u.group), text, matchlength);
-    }
     (*matchlength)++;
+    (*num_patterns)++;
   }
   while ((text[0] != '\0') && matchone(*pattern++, *text++));
 
@@ -822,7 +951,7 @@ void verify_re_match()
 int main(int argc, char* argv[])
 {
   verify_re_compile();
-  verify_re_printh();
+  verify_re_print();
   verify_re_match();
   return 0;
 }

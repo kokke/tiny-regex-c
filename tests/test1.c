@@ -159,7 +159,7 @@ int main()
         nfailed += do_test (tests_ok, i, ntests, 1);
     }
     free_test_cases (tests_ok, ntests);
-    
+
     struct test_case* tests_nok = read_tests ("tests/nok.lst", &ntests_nok);
     for (i = 0; i < ntests_nok; ++i)
     {
@@ -168,7 +168,7 @@ int main()
     free_test_cases (tests_nok, ntests_nok);
     ntests += ntests_nok;
 
-    printf(" %d/%d tests succeeded.\n\n", ntests - nfailed, ntests);
+    printf(" %d/%d tests succeeded.\n", ntests - nfailed, ntests);
 
     return nfailed; /* 0 if all tests passed */
 }

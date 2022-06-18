@@ -2,7 +2,6 @@ name: CI
 
 on:
   push:
-    branches: [ master ]
   pull_request:
     branches: [ master ]
 
@@ -22,3 +21,7 @@ jobs:
       run: make all
     - name: make test
       run: make test
+    - name: setup cbmc
+      run: sudo apt install -y --no-install-recommends cbmc
+    - name: make verify with cbmc
+      run: make verify

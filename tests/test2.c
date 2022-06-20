@@ -2075,22 +2075,22 @@ int main()
     bufsize /= 2;
   }
 
-  printf("\n\n");
-  printf("Testing pathological pattern '.+nonexisting.+' to force worst-case asymptotic performance: \n");
+  printf("\n");
+  printf("Testing pathological pattern '.+nonexisting.+' to force worst-case asymptotic performance:\n");
 
   for (i = 0; i < ntests; ++i)
   {
     old = buf[bufsizes[i]];
     buf[bufsizes[i]] = 0;
 
-    printf("  matching on %lu bytes of test input: ", bufsizes[i]);
+    printf(" matching on %lu bytes of test input: ", bufsizes[i]);
     fflush(stdout);
-    printf("%d \n", re_match(".+nonexisting.+", buf, &dummy));
+    printf("%d\n", re_match(".+nonexisting.+", buf, &dummy));
 
     buf[bufsizes[i]] = old;
   }
 
-  printf("\n\n");
+  printf("\n");
 
   return 0;
 }

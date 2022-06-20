@@ -38,6 +38,8 @@ old_pattern = ""
 if len(sys.argv) > 3:
   repeats = int(sys.argv[3])
 
+sys.stdout.write("Testing rejection of patterns against %d random strings also rejected by the Python implementation:\n" % ntests)
+
 def gen_no_match(pattern, minlen=1, maxlen=50, maxattempts=500):
   nattempts = 0
   while True:
@@ -55,7 +57,7 @@ with open(pattern_file, 'rt') as f:
     if pattern == old_pattern:
       break
     old_pattern = pattern
-    sys.stdout.write("pattern '%s': \n" % pattern)
+    sys.stdout.write(" pattern '%s':\n" % pattern)
 
     while repeats > 0:
       try:
@@ -76,5 +78,4 @@ with open(pattern_file, 'rt') as f:
         repeats = 0
         #nfails += 1
 
-sys.stdout.write("%4d/%d tests succeeded\n" % (ntests - nfails, ntests))
-#print("")
+sys.stdout.write("%4d/%d tests succeeded.\n\n" % (ntests - nfails, ntests))

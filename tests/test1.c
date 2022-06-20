@@ -16,102 +16,6 @@ struct test_case {
   int len;
 };
 
-/*
-#define OK    ((char*) 1)
-#define NOK   ((char*) 0)
-
-char* test_vector[][4] =
-{
-  { OK,  "\\d",                       "5",                (char*) 1      },
-  { OK,  "\\w+",                      "hej",              (char*) 3      },
-  { OK,  "\\s",                       "\t \n",            (char*) 1      },
-  { NOK, "\\S",                       "\t \n",            (char*) 0      },
-  { OK,  "[\\s]",                     "\t \n",            (char*) 1      },
-  { NOK, "[\\S]",                     "\t \n",            (char*) 0      },
-  { NOK, "\\D",                       "5",                (char*) 0      },
-  { NOK, "\\W+",                      "hej",              (char*) 0      },
-  { OK,  "[0-9]+",                    "12345",            (char*) 5      },
-  { OK,  "\\D",                       "hej",              (char*) 1      },
-  { NOK, "\\d",                       "hej",              (char*) 0      },
-  { OK,  "[^\\w]",                    "\\",               (char*) 1      },
-  { OK,  "[\\W]",                     "\\",               (char*) 1      },
-  { NOK, "[\\w]",                     "\\",               (char*) 0      },
-  { OK,  "[^\\d]",                    "d",                (char*) 1      },
-  { NOK, "[\\d]",                     "d",                (char*) 0      },
-  { NOK, "[^\\D]",                    "d",                (char*) 0      },
-  { OK,  "[\\D]",                     "d",                (char*) 1      },
-  { OK,  "^.*\\\\.*$",                "c:\\Tools",        (char*) 8      },
-  { OK,  "^[\\+-]*[\\d]+$",           "+27",              (char*) 3      },
-  { OK,  "[abc]",                     "1c2",              (char*) 1      },
-  { NOK, "[abc]",                     "1C2",              (char*) 0      },
-  { OK,  "[1-5]+",                    "0123456789",       (char*) 5      },
-  { OK,  "[1-5-]+",                   "123-",             (char*) 4      },
-  { OK,  "[1-5-]+[-1-2]-[-]", 	      "13132231--353444-511--",    (char *) 22  },
-  { OK,  "[.2]",                      "1C2",              (char*) 1      },
-  { OK,  "a*$",                       "Xaa",              (char*) 2      },
-  { OK,  "a*$",                       "Xaa",              (char*) 2      },
-  { OK,  "[a-h]+",                    "abcdefghxxx",      (char*) 8      },
-  { NOK, "[a-h]+",                    "ABCDEFGH",         (char*) 0      },
-  { OK,  "[A-H]+",                    "ABCDEFGH",         (char*) 8      },
-  { NOK, "[A-H]+",                    "abcdefgh",         (char*) 0      },
-  { OK,  "[^\\s]+",                   "abc def",          (char*) 3      },
-  { OK,  "[^fc]+",                    "abc def",          (char*) 2      },
-  { OK,  "[^d\\sf]+",                 "abc def",          (char*) 3      },
-  { OK,  "\n",                        "abc\ndef",         (char*) 1      },
-  { OK,  "b.\\s*\n",                  "aa\r\nbb\r\ncc\r\n\r\n",(char*) 4 },
-  { OK,  ".*c",                       "abcabc",           (char*) 6      },
-  { OK,  ".+c",                       "abcabc",           (char*) 6      },
-  { OK,  "[b-z].*",                   "ab",               (char*) 1      },
-  { OK,  "b[k-z]*",                   "ab",               (char*) 1      },
-  { NOK, "[0-9]",                     "  - ",             (char*) 0      },
-  { OK,  "[^0-9]",                    "  - ",             (char*) 1      },
-  { OK,  "0|",                        "0",                (char*) 1      }, // 42
-  { OK,  "0|",                        "",                 (char*) 0      },
-  { OK,  "0|",                        "0|",               (char*) 1      },
-  { OK,  "^0|",                       "x0",               (char*) 0      },
-  { NOK, "\\d\\d:\\d\\d:\\d\\d",      "0s:00:00",         (char*) 0      },
-  { NOK, "\\d\\d:\\d\\d:\\d\\d",      "000:00",           (char*) 0      },
-  { NOK, "\\d\\d:\\d\\d:\\d\\d",      "00:0000",          (char*) 0      },
-  { NOK, "\\d\\d:\\d\\d:\\d\\d",      "100:0:00",         (char*) 0      },
-  { NOK, "\\d\\d:\\d\\d:\\d\\d",      "00:100:00",        (char*) 0      },
-  { NOK, "\\d\\d:\\d\\d:\\d\\d",      "0:00:100",         (char*) 0      },
-  { OK,  "\\d\\d?:\\d\\d?:\\d\\d?",   "0:0:0",            (char*) 5      },
-  { OK,  "\\d\\d?:\\d\\d?:\\d\\d?",   "0:00:0",           (char*) 6      },
-  { OK,  "\\d\\d?:\\d\\d?:\\d\\d?",   "0:0:00",           (char*) 5      },
-  { OK,  "\\d\\d?:\\d\\d?:\\d\\d?",   "00:0:0",           (char*) 6      },
-  { OK,  "\\d\\d?:\\d\\d?:\\d\\d?",   "00:00:0",          (char*) 7      },
-  { OK,  "\\d\\d?:\\d\\d?:\\d\\d?",   "00:0:00",          (char*) 6      },
-  { OK,  "\\d\\d?:\\d\\d?:\\d\\d?",   "0:00:00",          (char*) 6      },
-  { OK,  "\\d\\d?:\\d\\d?:\\d\\d?",   "00:00:00",         (char*) 7      },
-  { OK,  "[Hh]ello [Ww]orld\\s*[!]?", "Hello world !",    (char*) 12     },
-  { OK,  "[Hh]ello [Ww]orld\\s*[!]?", "hello world !",    (char*) 12     },
-  { OK,  "[Hh]ello [Ww]orld\\s*[!]?", "Hello World !",    (char*) 12     },
-  { OK,  "[Hh]ello [Ww]orld\\s*[!]?", "Hello world!   ",  (char*) 11     },
-  { OK,  "[Hh]ello [Ww]orld\\s*[!]?", "Hello world  !",   (char*) 13     },
-  { OK,  "[Hh]ello [Ww]orld\\s*[!]?", "hello World    !", (char*) 15     },
-  { NOK, "\\d\\d?:\\d\\d?:\\d\\d?",   "a:0",              (char*) 0      },
-  { OK,  "[^\\w][^-1-4]",     ")T",          (char*) 2      },
-  { OK,  "[^\\w][^-1-4]",     ")^",          (char*) 2      },
-  { OK,  "[^\\w][^-1-4]",     "*)",          (char*) 2      },
-  { OK,  "[^\\w][^-1-4]",     "!.",          (char*) 2      },
-  { OK,  "[^\\w][^-1-4]",     " x",          (char*) 2      },
-  { OK,  "[^\\w][^-1-4]",     "$b",          (char*) 2      },
-  { OK,  ".?bar",                      "real_bar",        (char*) 4      },
-  { NOK, ".?bar",                      "real_foo",        (char*) 0      },
-  { NOK, "X?Y",                        "Z",               (char*) 0      },
-  { OK, "[a-z]+\nbreak",              "blahblah\nbreak",  (char*) 14     },
-  { OK, "[a-z\\s]+\nbreak",           "bla bla \nbreak",  (char*) 14     },
-  { NOK, "a\\",                       "a\\",              (char*) 0      },
-  { NOK, "\\",                        "\\",               (char*) 0      },
-  { OK,  "\\\\",                      "\\",               (char*) 1      },
-  { OK,  "0|1",                       "0",                (char*) 1      },
-  { OK,  "[A-Z]|[0-9]",               "0",                (char*) 1      },
-  { OK,  "\\w|\\s",                   "_ ",               (char*) 1      },
-  // no multibyte support yet
-  //{ OK,  "\\w+",                      "Çüéâ",             (char*) 4      },
-};
-*/
-
 void re_print(re_t);
 
 /* "\\n" => "\n" */
@@ -244,6 +148,8 @@ int main()
     int nfailed = 0;
     int i;
 
+    printf("Testing hand-picked regex patterns\n");
+    
     //setlocale(LC_CTYPE, "en_US.UTF-8");
     struct test_case* tests_ok = read_tests ("tests/ok.lst", &ntests);
     for (i = 0; i < ntests; ++i)
@@ -260,9 +166,7 @@ int main()
     free_test_cases (tests_nok, ntests_nok);
     ntests += ntests_nok;
 
-    printf("%d/%d tests succeeded.\n", ntests - nfailed, ntests);
-    printf("\n");
-    printf("\n");
+    printf(" %d/%d tests succeeded.\n\n", ntests - nfailed, ntests);
 
     return nfailed; /* 0 if all tests passed */
 }

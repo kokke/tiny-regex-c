@@ -37,6 +37,8 @@ old_pattern = ""
 if len(sys.argv) > 3:
   repeats = int(sys.argv[3])
 
+sys.stdout.write("Testing patterns against %d random strings matching the Python implementation and comparing::\n" % ntests)
+
 with open(pattern_file, 'rt') as f:
   for line in f:
     parts = line.split('\t')
@@ -52,7 +54,7 @@ with open(pattern_file, 'rt') as f:
       except:
         pass
     
-    sys.stdout.write("pattern '%s': \n" % pattern)
+    sys.stdout.write(" pattern '%s':\n" % pattern)
     
     while repeats > 0:
       try:
@@ -73,6 +75,6 @@ with open(pattern_file, 'rt') as f:
         repeats = 0
         #nfails += 1
 
-sys.stdout.write("%4d/%d tests succeeded \n" % (ntests - nfails, ntests))
+sys.stdout.write("%4d/%d tests succeeded.\n\n" % (ntests - nfails, ntests))
 #print("")
 

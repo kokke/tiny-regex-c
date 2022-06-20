@@ -215,7 +215,7 @@ re_t re_compile(const char* pattern)
         i += (p - &pattern[i]);
         break;
       }
-      /* Escaped character-classes (\s \w ...): */
+      /* Escaped character-classes (\s \S \w \W \d \D \*): */
       case '\\':
       {
         if (pattern[i+1] != '\0')
@@ -225,7 +225,7 @@ re_t re_compile(const char* pattern)
           /* ... and check the next */
           switch (pattern[i])
           {
-            /* Meta-character: */
+            /* Meta-characters: */
             case 'd': {    re_compiled[j].type = DIGIT;            } break;
             case 'D': {    re_compiled[j].type = NOT_DIGIT;        } break;
             case 'w': {    re_compiled[j].type = ALPHA;            } break;

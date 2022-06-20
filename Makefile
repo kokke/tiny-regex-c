@@ -37,33 +37,18 @@ clean:
 
 test-pyok: tests/test_rand
 	@$(test $(PYTHON))
-	@echo
-	@echo Testing patterns against $(NRAND_TESTS) random strings matching the Python implementation and comparing:
-	@echo
 	@$(PYTHON) ./scripts/regex_test.py tests/ok.lst $(NRAND_TESTS)
-	@echo
 
 test-pynok: tests/test_rand_neg
 	@$(test $(PYTHON))
-	@echo
-	@echo Testing rejection of patterns against $(NRAND_TESTS) random strings also rejected by the Python implementation:
-	@echo
 	@$(PYTHON) ./scripts/regex_test_neg.py tests/nok.lst $(NRAND_TESTS)
-	@echo
 
 test: all 
-	@echo Testing hand-picked regex\'s:
 	@./tests/test1
-	@echo
 	$(MAKE) test-pyok
-	@echo
 	$(MAKE) test-pynok
-	@echo
-	@echo Testing handling of invalid regex patterns
 	@./tests/test_compile
-	@echo
 	@./tests/test2
-	@echo
 
 CBMC := cbmc
 

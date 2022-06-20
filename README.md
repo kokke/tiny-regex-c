@@ -61,7 +61,7 @@ The following features / regex-operators are supported by this library.
   -  `[abc]`     Character class, match if one of {'a', 'b', 'c'}
   -  `[^abc]`   Inverted class, match if NOT one of {'a', 'b', 'c'}
   -  `[a-zA-Z]` Character ranges, the character set of the ranges { a-z | A-Z }
-  -  `\s`       Whitespace, \t \f \r \n \v and spaces
+  -  `\s`       Whitespace, '\t' '\f' '\r' '\n' '\v' and spaces
   -  `\S`       Non-whitespace
   -  `\w`       Alphanumeric, [a-zA-Z0-9_]
   -  `\W`       Non-alphanumeric
@@ -88,7 +88,7 @@ int match_length;
 /* Standard null-terminated C-string to search: */
 const char* string_to_search = "ahem.. 'hello world !' ..";
 
-/* Compile a simple regular expression using character classes, meta-char and greedy + non-greedy quantifiers: */
+/* Compile a simple regular expression using character classes, meta-char and greedy quantifiers: */
 re_t pattern = re_compile("[Hh]ello [Ww]orld\\s*[!]?");
 
 /* Check if the regex matches the text: */
@@ -102,10 +102,15 @@ if (match_idx != -1)
 For more usage examples I encourage you to look at the code in the `tests`-folder.
 
 ### TODO
-- Fix implementation of branches (`|`), and see if that can lead us closer to groups as well, e.g. `(a|b)+`.
+- Fix implementation of branches (`|`) (see the branch), and add groups as well, e.g. `(a|b)+`.
+- `re_match_capture()` with groups.
 - Add `example.c` that demonstrates usage.
 - Add `tests/test_perf.c` for performance and time measurements.
-- Add optional multibyte support (e.g. UTF-8)
+- Add optional multibyte support (e.g. UTF-8). On non-wchar systems roll our own.
+- Word boundary: \b \B
+- non-greedy, lazy quantifiers (??, +?, *?, {n,m}?)
+- case-insensitive option or API. `re_matchi()`
+- '.' may not match '\r' nor '\n', unless a single-line option is given.
 - Testing: Improve pattern rejection testing.
 
 ### FAQ

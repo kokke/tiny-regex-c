@@ -334,7 +334,7 @@ re_t re_compile(const char* pattern)
         re_compiled[j].u.ccl = &ccl_buf[buf_begin];
       } break;
 
-      case '\0': // EOL
+      case '\0': // EOL (dead-code)
         return 0;
 
       /* Other characters: */

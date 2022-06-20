@@ -22,10 +22,15 @@ int main()
     "\\\x01[^\\\xff][\\",
     /* Invalid escape. '\\' as last char without previous \\ */
     "\\",
+    /* incomplete char classes */
+    "[^", "[abc\\",
+    /* overlong char classes */
+    "[0123456789012345678901234567890123456789]",
+    "[01234567890123456789\\0123456789012345678]",
+    "[00000000000000000000000000000000000000][",
     /* quantifiers without context: nothing to repeat at position 0 */
     "+", "?", "*",
     /* Tests 7-12: invalid quantifiers. */
-    "x{0}", "x{2,1}",
     /* note that python and perl allows these, and matches them exact. */
     // "{2}", "x{}", "x{1,2,}", "x{,2,}", "x{-2}",
   };

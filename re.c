@@ -373,7 +373,9 @@ static int matchcharclass(char c, const char* str)
     {
       if (c == '-')
       {
-        return ((str[-1] == '\0') || (str[1] == '\0'));
+        if ((str[-1] == '\0') || (str[1] == '\0'))
+            return 1;
+        // else continue
       }
       else
       {

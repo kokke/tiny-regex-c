@@ -60,8 +60,8 @@ typedef struct regex_t
   enum regex_type_e type;   /* CHAR, STAR, etc.                      */
   union
   {
-    unsigned char  ch;   /*      the character itself             */
-    unsigned char* ccl;  /*  OR  a pointer to characters in class */
+    char  ch;            /*      the character itself             */
+    char* ccl;           /*  OR  a pointer to characters in class */
     char* group;         /*  OR  a pointer to a group */
     struct {
       unsigned short n;
@@ -140,7 +140,7 @@ re_t re_compile(const char* pattern)
        char-classes in the expression.
      MAX_GROUP_LEN determines the size of the buffer for all grouped chars. */
   static regex_t re_compiled[MAX_REGEXP_OBJECTS];
-  static unsigned char ccl_buf[MAX_CHAR_CLASS_LEN];
+  static char ccl_buf[MAX_CHAR_CLASS_LEN];
   static char group_buf[MAX_GROUP_LEN];
   int ccl_bufidx = 1;
   int group_bufidx = 0;
@@ -198,39 +198,53 @@ re_t re_compile(const char* pattern)
       case '{':
       {
         unsigned short n, m;
-        if (2 != sscanf (&pattern[i], "{%hu,%hu}", &n, &m))
+        char *p = strchr (&pattern[i+1], '}');
+        re_compiled[j].type = CHAR;
+        re_compiled[j].u.ch = c;
+        if (!p || j == 0) // those invalid quantifiers are compiled as is
+        {                 // (in python and perl)
+          re_compiled[j].type = CHAR;
+          re_compiled[j].u.ch = c;
+        }
+        else if (2 != sscanf (&pattern[i], "{%hd,%hd}", &n, &m))
         {
-          if (1 != sscanf (&pattern[i], "{%hu,}", &re_compiled[j].u.n))
+          if (1 != sscanf (&pattern[i], "{%hd,}", &n) ||
+              n == 0 || n > 32767)
           {
-            if (1 != sscanf (&pattern[i], "{,%hu}", &re_compiled[j].u.m))
+            if (1 != sscanf (&pattern[i], "{,%hd}", &m) ||
+                *(p-1) == ',' || m == 0 || m > 32767)
             {
-              if (1 != sscanf (&pattern[i], "{%hu}", &re_compiled[j].u.n) ||
-                0 == re_compiled[j].u.n)
-                return 0;
-              else
+              if (1 == sscanf (&pattern[i], "{%hd}", &n) &&
+                  n > 0 && n <= 32767)
+              {
                 re_compiled[j].type = TIMES;
+                re_compiled[j].u.n = n;
+              }
             }
             else
+            {
               re_compiled[j].type = TIMES_M;
+              re_compiled[j].u.m = m;
+            }
           }
           else
+          {
             re_compiled[j].type = TIMES_N;
+            re_compiled[j].u.n = n;
+          }
         }
         else
         {
-          if (n == 0 || m < n) // m must be greater-equal than n
-            return 0;
-          re_compiled[j].u.n = n;
-          if (m == n)
-            re_compiled[j].type = TIMES;
-          else
+          // m must be greater than n, and none of them may be 0 or negative.
+          if (!(n == 0 || m == 0 || n > 32767 || m > 32767 || m <= n || *(p-1) == ','))
           {
             re_compiled[j].type = TIMES_NM;
+            re_compiled[j].u.n = n;
             re_compiled[j].u.m = m;
           }
         }
-        char *p = strchr (&pattern[i+1], '}');
-        i += (p - &pattern[i]);
+        if (re_compiled[j].type != CHAR)
+          i += (p - &pattern[i]);
         break;
       }
       /* Escaped character-classes (\s \S \w \W \d \D \*): */
@@ -327,8 +341,8 @@ re_t re_compile(const char* pattern)
       default:
       {
         re_compiled[j].type = CHAR;
-        // cbmc: arithmetic overflow on signed to unsigned type conversion in (unsigned char)c
-        re_compiled[j].u.ch = (unsigned char)c;
+        // cbmc: arithmetic overflow on signed to unsigned type conversion in c
+        re_compiled[j].u.ch = c;
       } break;
     }
     i += 1;

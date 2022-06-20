@@ -135,6 +135,8 @@ int do_test (struct test_case* test_case, int i, int ntests, int ok)
         }
         else if (length != correctlen)
         {
+            printf("\n");
+            re_print(re_compile(pattern));
             fprintf(stderr, "[%d/%d]: pattern '%s' matched '%i' chars of '%s'; expected '%i'. \n", (i+1), ntests, pattern, length, text, correctlen);
             nfailed += 1;
         }

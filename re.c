@@ -26,6 +26,7 @@
  *   '|'        Branch Or, e.g. a|A, \w|\s
  *   '{n}'      Match n times
  *   '{n,}'     Match n or more times
+ *   '{,m}'     Match m or less times
  *   '{n,m}'    Match n to m times
  * TODO:
  *   '(...)'    Group
@@ -52,7 +53,7 @@
 enum regex_type_e { UNUSED, DOT, BEGIN, END, QUESTIONMARK, STAR, PLUS, CHAR,
                     CHAR_CLASS, INV_CHAR_CLASS, DIGIT, NOT_DIGIT, ALPHA,
                     NOT_ALPHA, WHITESPACE, NOT_WHITESPACE, BRANCH, GROUP,
-                    TIMES, TIMES_N, TIMES_NM };
+                    TIMES, TIMES_N, TIMES_M, TIMES_NM };
 
 typedef struct regex_t
 {
@@ -79,6 +80,7 @@ static int matchbranch(regex_t p, regex_t* pattern, const char* text, int* match
 //static int matchgroup(regex_t* p, regex_t* last_pattern, const char* text, int* matchlength);
 static int matchtimes(regex_t p, unsigned short n, const char* text, int* matchlength);
 static int matchtimes_n(regex_t p, unsigned short n, const char* text, int* matchlength);
+static int matchtimes_m(regex_t p, unsigned short m, const char* text, int* matchlength);
 static int matchtimes_nm(regex_t p, unsigned short n, unsigned short m,
                          const char* text, int* matchlength);
 static int matchone(regex_t p, char c);
@@ -182,11 +184,16 @@ re_t re_compile(const char* pattern)
         {
           if (1 != sscanf (&pattern[i], "{%hu,}", &re_compiled[j].u.n))
           {
-            if (1 != sscanf (&pattern[i], "{%hu}", &re_compiled[j].u.n) ||
+            if (1 != sscanf (&pattern[i], "{,%hu}", &re_compiled[j].u.m))
+            {
+              if (1 != sscanf (&pattern[i], "{%hu}", &re_compiled[j].u.n) ||
                 0 == re_compiled[j].u.n)
-              return 0;
+                return 0;
+              else
+                re_compiled[j].type = TIMES;
+            }
             else
-              re_compiled[j].type = TIMES;
+              re_compiled[j].type = TIMES_M;
           }
           else
             re_compiled[j].type = TIMES_N;
@@ -317,7 +324,7 @@ re_t re_compile(const char* pattern)
 
 void re_print(regex_t* pattern)
 {
-  const char *const types[] = { "UNUSED", "DOT", "BEGIN", "END", "QUESTIONMARK", "STAR", "PLUS", "CHAR", "CHAR_CLASS", "INV_CHAR_CLASS", "DIGIT", "NOT_DIGIT", "ALPHA", "NOT_ALPHA", "WHITESPACE", "NOT_WHITESPACE", "BRANCH", "GROUP", "TIMES", "TIMES_N", "TIMES_NM" };
+  const char *const types[] = { "UNUSED", "DOT", "BEGIN", "END", "QUESTIONMARK", "STAR", "PLUS", "CHAR", "CHAR_CLASS", "INV_CHAR_CLASS", "DIGIT", "NOT_DIGIT", "ALPHA", "NOT_ALPHA", "WHITESPACE", "NOT_WHITESPACE", "BRANCH", "GROUP", "TIMES", "TIMES_N", "TIMES_M", "TIMES_NM" };
 
   unsigned char i;
   unsigned char j;
@@ -367,7 +374,11 @@ void re_print(regex_t* pattern)
     }
     else if (pattern[i].type == TIMES_N)
     {
-      printf("{%hu,}", pattern[i].u.n);
+      printf("{%hu,}", pattern[i].u.m);
+    }
+    else if (pattern[i].type == TIMES_M)
+    {
+      printf("{,%hu}", pattern[i].u.n);
     }
     else if (pattern[i].type == TIMES_NM)
     {
@@ -561,6 +572,18 @@ static int matchtimes_n(regex_t p, unsigned short n, const char* text, int* matc
   return 0;
 }
 
+static int matchtimes_m(regex_t p, unsigned short m, const char* text, int* matchlength)
+{
+  unsigned short i = 0;
+  /* Match the pattern max m times */
+  while (*text && matchone(p, *text++) && i < m)
+  {
+    (*matchlength)++;
+    i++;
+  }
+  return 1;
+}
+
 static int matchtimes_nm(regex_t p, unsigned short n, unsigned short m, const char* text, int* matchlength)
 {
   unsigned short i = 0;
@@ -621,6 +644,10 @@ static int matchpattern(regex_t* pattern, const char* text, int *matchlength)
   {
     return matchtimes_n(pattern[0], pattern[1].u.n, text, matchlength);
   }
+  else if (pattern[1].type == TIMES_M)
+  {
+    return matchtimes_m(pattern[0], pattern[1].u.m, text, matchlength);
+  }
   else if (pattern[1].type == TIMES_NM)
   {
     return matchtimes_nm(pattern[0], pattern[1].u.n, pattern[1].u.m, text,
@@ -673,6 +700,10 @@ static int matchpattern(regex_t* pattern, const char* text, int* matchlength)
     else if (pattern[1].type == TIMES_N)
     {
       return matchtimes_n(pattern[0], pattern[1].u.n, text, matchlength);
+    }
+    else if (pattern[1].type == TIMES_M)
+    {
+      return matchtimes_m(pattern[0], pattern[1].u.m, text, matchlength);
     }
     else if (pattern[1].type == TIMES_NM)
     {

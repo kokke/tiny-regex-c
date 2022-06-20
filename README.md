@@ -58,6 +58,10 @@ The following features / regex-operators are supported by this library.
   -  `*`         Asterisk, match zero or more (greedy)
   -  `+`         Plus, match one or more (greedy)
   -  `?`         Question, match zero or one (non-greedy)
+  -  `{n}`       Exact Quantifier
+  -  `{n,}`      Match n or more times
+  -  `{,m}`      Match m or less times
+  -  `{n,m}`     Match n to m times
   -  `[abc]`     Character class, match if one of {'a', 'b', 'c'}
   -  `[^abc]`   Inverted class, match if NOT one of {'a', 'b', 'c'}
   -  `[a-zA-Z]` Character ranges, the character set of the ranges { a-z | A-Z }
@@ -103,7 +107,6 @@ For more usage examples I encourage you to look at the code in the `tests`-folde
 
 ### TODO
 - Fix implementation of groups, e.g. `(a|b)+`. See rurban's branch+group+times.
-- Add `{n}`, `{n,m}` quantifier support.
 - Add `example.c` that demonstrates usage.
 - Add `tests/test_perf.c` for performance and time measurements.
 - Add optional multibyte support (e.g. UTF-8). On non-wchar systems roll our own.

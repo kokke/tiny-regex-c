@@ -62,6 +62,8 @@ struct test_case* read_tests (const char *fname, int *ntests)
         int l;
         if (!p) // no tab, just an old exreg test
           continue;
+        if (s[0] == '#') // outcommented
+          continue;
         l = p - s;
         vec[i].rx = cunquote (s, l);
         // string from first tab

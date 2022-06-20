@@ -71,6 +71,8 @@ The following features / regex-operators are supported by this library.
   -  `\W`       Non-alphanumeric
   -  `\d`       Digits, [0-9]
   -  `\D`       Non-digits
+  -  `|`        Branch Or, e.g. a|A, \w|\s
+  -  `(...)`    Group
 
 ### Usage
 Compile a regex from ASCII-string (char-array) to a custom pattern structure using `re_compile()`.
@@ -106,16 +108,15 @@ if (match_idx != -1)
 For more usage examples I encourage you to look at the code in the `tests`-folder.
 
 ### TODO
-- Fix implementation of groups, e.g. `(a|b)+`. See rurban's branch+group+times.
+- Fix length with nested groups, e.g. `((ab)|b)+` =~ abbb => 7 not 4.
 - Add `example.c` that demonstrates usage.
 - Add `tests/test_perf.c` for performance and time measurements.
 - Add optional multibyte support (e.g. UTF-8). On non-wchar systems roll our own.
 - Word boundary: \b \B
-- non-greedy, lazy quantifiers (??, +?, *?, {n,m}?)
-- case-insensitive option or API. `re_matchi()`
+- Non-greedy, lazy quantifiers (??, +?, *?, {n,m}?)
+- Case-insensitive option or API. `re_matchi()`
 - `re_match_capture()` with groups.
 - '.' may not match '\r' nor '\n', unless a single-line option is given.
-- Testing: Improve pattern rejection testing.
 
 ### FAQ
 - *Q: What differentiates this library from other C regex implementations?*

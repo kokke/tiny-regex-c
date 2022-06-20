@@ -159,10 +159,28 @@ re_t re_compile(const char* pattern)
       case '^': {    re_compiled[j].type = BEGIN;           } break;
       case '$': {    re_compiled[j].type = END;             } break;
       case '.': {    re_compiled[j].type = DOT;             } break;
-      case '*': {    re_compiled[j].type = STAR;            } break;
-      case '+': {    re_compiled[j].type = PLUS;            } break;
-      case '?': {    re_compiled[j].type = QUESTIONMARK;    } break;
       case '|': {    re_compiled[j].type = BRANCH;          } break;
+      case '*':
+      {
+        if (j > 0)
+          re_compiled[j].type = STAR;
+        else // nothing to repeat at position 0
+          return 0;
+      } break;
+      case '+':
+      {
+        if (j > 0)
+          re_compiled[j].type = PLUS;
+        else // nothing to repeat at position 0
+          return 0;
+      } break;
+      case '?':
+      {
+        if (j > 0)
+          re_compiled[j].type = QUESTIONMARK;
+        else // nothing to repeat at position 0
+          return 0;
+      } break;
 
       case '(':
       {

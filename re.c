@@ -23,6 +23,7 @@
  *   '\W'       Non-alphanumeric
  *   '\d'       Digits, [0-9]
  *   '\D'       Non-digits
+ *   '\xXX'     Hex-encoded byte
  *   '|'        Branch Or, e.g. a|A, \w|\s
  *   '{n}'      Match n times
  *   '{n,}'     Match n or more times
@@ -103,7 +104,7 @@ static int matchmetachar(char c, const char* str);
 static int matchrange(char c, const char* str);
 static int matchdot(char c);
 static int ismetachar(char c);
-
+static int hex (char c);
 
 /* Public functions: */
 int re_match(const char* pattern, const char* text, int* matchlength)
@@ -300,8 +301,42 @@ re_t re_compile(const char* pattern)
             case 'W': {    re_compiled[j].type = NOT_ALPHA;        } break;
             case 's': {    re_compiled[j].type = WHITESPACE;       } break;
             case 'S': {    re_compiled[j].type = NOT_WHITESPACE;   } break;
+            case 'x': {
+              /* \xXX */
+              re_compiled[j].type = CHAR;
+              i++;
+              int h = hex(pattern[i]);
+              if (h == -1)
+              {
+                re_compiled[j].u.ch = '\\';
+                re_compiled[j].type = CHAR;
+                re_compiled[++j].u.ch = 'x';
+                re_compiled[j].type = CHAR;
+                re_compiled[++j].u.ch = pattern[i];
+                re_compiled[j].type = CHAR;
+                break;
+              }
+              re_compiled[j].u.ch = h << 4;
+              h = hex(pattern[++i]);
+              if (h != -1)
+                re_compiled[j].u.ch += h;
+              else
+              {
+                re_compiled[j].u.ch = '\\';
+                re_compiled[j].type = CHAR;
+                re_compiled[++j].u.ch = 'x';
+                re_compiled[j].type = CHAR;
+                re_compiled[++j].u.ch = pattern[i-1];
+                re_compiled[j].type = CHAR;
+                if (pattern[i])
+                {
+                  re_compiled[++j].u.ch = pattern[i];
+                  re_compiled[j].type = CHAR;
+                }
+              }
+            } break;
 
-              /* Escaped character, e.g. '.', '$' or '\\' */
+            /* Escaped character, e.g. '.', '$' or '\\' */
             default:
             {
               re_compiled[j].type = CHAR;
@@ -465,6 +500,18 @@ void re_print(regex_t* pattern)
     }
     printf("\n");
   }
+}
+
+static int hex (char c)
+{
+  if (c >= 'a' && c <= 'f')
+    return c - 'a' + 10;
+  else if (c >= 'A' && c <= 'F')
+    return c - 'A' + 10;
+  else if (c >= '0' && c <= '9')
+    return c - '0';
+  else
+    return -1;
 }
 
 /* Private functions: */

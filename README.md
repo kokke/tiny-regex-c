@@ -71,6 +71,7 @@ The following features / regex-operators are supported by this library.
   -  `\W`       Non-alphanumeric
   -  `\d`       Digits, [0-9]
   -  `\D`       Non-digits
+  -  `\xXX`     Hex-encoded byte
   -  `|`        Branch Or, e.g. a|A, \w|\s
   -  `(...)`    Group
 

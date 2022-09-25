@@ -110,7 +110,7 @@ int main()
         pattern = test_vector[i][1];
         text = test_vector[i][2];
         should_fail = (test_vector[i][0] == NOK);
-        correctlen = (int)(test_vector[i][3]);
+        correctlen = (int)(long)(test_vector[i][3]);
 
         int m = re_match(pattern, text, &length);
 
@@ -120,7 +120,7 @@ int main()
             {
                 printf("\n");
                 re_print(re_compile(pattern));
-                fprintf(stderr, "[%lu/%lu]: pattern '%s' matched '%s' unexpectedly, matched %i chars. \n", (i+1), ntests, pattern, text, length);
+                fprintf(stderr, "[%zu/%zu]: pattern '%s' matched '%s' unexpectedly, matched %i chars. \n", (i+1), ntests, pattern, text, length);
                 nfailed += 1;
             }
         }
@@ -130,19 +130,19 @@ int main()
             {
                 printf("\n");
                 re_print(re_compile(pattern));
-                fprintf(stderr, "[%lu/%lu]: pattern '%s' didn't match '%s' as expected. \n", (i+1), ntests, pattern, text);
+                fprintf(stderr, "[%zu/%zu]: pattern '%s' didn't match '%s' as expected. \n", (i+1), ntests, pattern, text);
                 nfailed += 1;
             }
             else if (length != correctlen)
             {
-                fprintf(stderr, "[%lu/%lu]: pattern '%s' matched '%i' chars of '%s'; expected '%i'. \n", (i+1), ntests, pattern, length, text, correctlen);
+                fprintf(stderr, "[%zu/%zu]: pattern '%s' matched '%i' chars of '%s'; expected '%i'. \n", (i+1), ntests, pattern, length, text, correctlen);
                 nfailed += 1;
             }
         }
     }
 
     // printf("\n");
-    printf("%lu/%lu tests succeeded.\n", ntests - nfailed, ntests);
+    printf("%zu/%zu tests succeeded.\n", ntests - nfailed, ntests);
     printf("\n");
     printf("\n");
     printf("\n");

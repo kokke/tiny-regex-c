@@ -2083,7 +2083,7 @@ int main()
     old = buf[bufsizes[i]];
     buf[bufsizes[i]] = 0;
 
-    printf("  matching on %lu bytes of test input: ", bufsizes[i]);
+    printf("  matching on %zu bytes of test input: ", bufsizes[i]);
     fflush(stdout);
     printf("%d \n", re_match(".+nonexisting.+", buf, &dummy));
 

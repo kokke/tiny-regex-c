@@ -112,13 +112,7 @@ int main()
     size_t nfailed = 0;
     size_t i;
 
-<<<<<<< HEAD
-    //setlocale(LC_CTYPE, "en_US.UTF-8");
-
-    for (i = 0; i < ntests; ++i)
-=======
     for (i = 0; i < nvector_tests; ++i)
->>>>>>> 964b93a (fix mishandling of ^ inside an expression)
     {
         pattern = test_vector[i][1];
         text = test_vector[i][2];

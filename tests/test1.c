@@ -170,6 +170,22 @@ int main()
     free_test_cases (tests_nok, ntests_nok);
     ntests += ntests_nok;
 
+    // regression test for unhandled BEGIN in the middle of an expression
+    // we need to test text strings with all possible values for the second
+    // byte because re.c was matching it against an uninitalized value, so
+    // it could be anything
+    int length;
+    const char* pattern = "a^";
+    for (i = 0; i < 255; i++) {
+      char text_buf[] = { 'a', i, '\0' };
+      int m = re_match(pattern, text_buf, &length);
+      if (m != -1) {
+        fprintf(stderr, "[%d/%d]: pattern '%s' matched '%s' unexpectedly", ntests, ntests, pattern, text_buf);
+        nfailed += 1;
+        break;
+      }
+    }
+    ntests++;
     printf(" %d/%d tests succeeded.\n", ntests - nfailed, ntests);
 
     return nfailed; /* 0 if all tests passed */

@@ -630,6 +630,7 @@ static int matchone(regex_t p, char c)
     case WHITESPACE:     return  matchwhitespace(c);
     case NOT_WHITESPACE: return !matchwhitespace(c);
     case GROUPEND:       return  1;
+    case BEGIN:          return 0;
     default:             return  (p.u.ch == c);
   }
 }

@@ -51,8 +51,6 @@ int  re_match(const char* pattern, const char* text, int* matchlength);
 ### Supported regex-operators
 The following features / regex-operators are supported by this library.
 
-NOTE: inverted character classes are buggy - see the test harness for concrete examples.
-
 
   -  `.`         Dot, matches any character
   -  `^`         Start anchor, matches beginning of string
@@ -60,15 +58,22 @@ NOTE: inverted character classes are buggy - see the test harness for concrete e
   -  `*`         Asterisk, match zero or more (greedy)
   -  `+`         Plus, match one or more (greedy)
   -  `?`         Question, match zero or one (non-greedy)
+  -  `{n}`       Exact Quantifier
+  -  `{n,}`      Match n or more times
+  -  `{,m}`      Match m or less times
+  -  `{n,m}`     Match n to m times
   -  `[abc]`     Character class, match if one of {'a', 'b', 'c'}
   -  `[^abc]`   Inverted class, match if NOT one of {'a', 'b', 'c'}
   -  `[a-zA-Z]` Character ranges, the character set of the ranges { a-z | A-Z }
-  -  `\s`       Whitespace, \t \f \r \n \v and spaces
+  -  `\s`       Whitespace, '\t' '\f' '\r' '\n' '\v' and spaces
   -  `\S`       Non-whitespace
   -  `\w`       Alphanumeric, [a-zA-Z0-9_]
   -  `\W`       Non-alphanumeric
   -  `\d`       Digits, [0-9]
   -  `\D`       Non-digits
+  -  `\xXX`     Hex-encoded byte
+  -  `|`        Branch Or, e.g. a|A, \w|\s
+  -  `(...)`    Group
 
 ### Usage
 Compile a regex from ASCII-string (char-array) to a custom pattern structure using `re_compile()`.
@@ -90,7 +95,7 @@ int match_length;
 /* Standard null-terminated C-string to search: */
 const char* string_to_search = "ahem.. 'hello world !' ..";
 
-/* Compile a simple regular expression using character classes, meta-char and greedy + non-greedy quantifiers: */
+/* Compile a simple regular expression using character classes, meta-char and greedy quantifiers: */
 re_t pattern = re_compile("[Hh]ello [Ww]orld\\s*[!]?");
 
 /* Check if the regex matches the text: */
@@ -104,11 +109,15 @@ if (match_idx != -1)
 For more usage examples I encourage you to look at the code in the `tests`-folder.
 
 ### TODO
-- Fix the implementation of inverted character classes.
-- Fix implementation of branches (`|`), and see if that can lead us closer to groups as well, e.g. `(a|b)+`.
+- Fix length with nested groups, e.g. `((ab)|b)+` =~ abbb => 7 not 4.
 - Add `example.c` that demonstrates usage.
 - Add `tests/test_perf.c` for performance and time measurements.
-- Testing: Improve pattern rejection testing.
+- Add optional multibyte support (e.g. UTF-8). On non-wchar systems roll our own.
+- Word boundary: \b \B
+- Non-greedy, lazy quantifiers (??, +?, *?, {n,m}?)
+- Case-insensitive option or API. `re_matchi()`
+- `re_match_capture()` with groups.
+- '.' may not match '\r' nor '\n', unless a single-line option is given.
 
 ### FAQ
 - *Q: What differentiates this library from other C regex implementations?*
@@ -118,6 +127,3 @@ For more usage examples I encourage you to look at the code in the `tests`-folde
 ### License
 All material in this repository is in the public domain.
 
-
-
- 

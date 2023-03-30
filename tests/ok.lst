@@ -1,0 +1,81 @@
+\d		"5"		1
+\w+		"hej"		3
+\s		"\t \n"		1
+[\s]		"\t \n"		1
+[0-9]+		"12345"		5
+\D		"hej"		1
+[^\w]		"\"		1
+[\W]		"\"		1
+[^\d]		"d"		1
+[\D]		"d"		1
+^.*\\.*$	"c:\Tools"	8
+^[\+-]*[\d]+$	"+27"		3
+[abc]		"1c2"		1
+[1-5]+		"0123456789"	5
+[.2]		"1C2"		1
+a*$		"Xaa"		2
+a*$		"Xaa"		2
+[a-h]+		"abcdefghxxx"	8
+[A-H]+		"ABCDEFGH"	8
+[^\s]+		"abc def"	3
+[^fc]+		"abc def"	2
+[^d\sf]+	"abc def"	3
+\n		"abc\ndef"	1
+b.\s*\n		"aa\r\nbb\r\ncc\r\n\r\n"	4
+.*c		"abcabc"	6
+.+c		"abcabc"	6
+[b-z].*		"ab"		1
+b[k-z]*		"ab"		1
+[^0-9]		"  - "		1
+[1-5-]+[-1-2]-[-]	"13132231--353444-511--"	22
+\[a-z\]		"[a-z]"		5
+0|		"0"		1
+0|		""		0
+0|		"0|"		1
+^0|		"x0"		0
+\d\d?:\d\d?:\d\d?		"0:0:0"		5
+\d\d?:\d\d?:\d\d?		"0:00:0"	6
+\d\d?:\d\d?:\d\d?		"0:0:00"	5
+\d\d?:\d\d?:\d\d?		"00:0:0"	6
+\d\d?:\d\d?:\d\d?		"00:00:0"	7
+\d\d?:\d\d?:\d\d?		"00:0:00"	6
+\d\d?:\d\d?:\d\d?		"0:00:00"	6
+\d\d?:\d\d?:\d\d?		"00:00:00"	7
+[Hh]ello [Ww]orld\s*[!]?	"Hello world !"	12
+[Hh]ello [Ww]orld\s*[!]?	"hello world !"	12
+[Hh]ello [Ww]orld\s*[!]?	"Hello World !"	12
+[Hh]ello [Ww]orld\s*[!]?	"Hello world!   "	11
+[Hh]ello [Ww]orld\s*[!]?	"Hello world  !"	13
+[Hh]ello [Ww]orld\s*[!]?	"hello World   !"	14
+.?bar			"real_bar"			4
+[a-z]+\nbreak		"blahblah\nbreak"		14
+[a-z\s]+\nbreak		"bla bla \nbreak"		14
+[^\w][^-1-4]		")T"		2
+[^\w][^-1-4]		")^"		2
+[^\w][^-1-4]		"*)"		2
+[^\w][^-1-4]		"!."		2
+[^\w][^-1-4]		" x"		2
+[^\w][^-1-4]		"$b"		2
+\\			"\"		1
+\x4C			"L"		1
+\x4			"\\x4"		3
+\x4X			"\\x4X"		4
+0|1			"0"		1
+[A-Z]|[0-9]		"0"		1
+\w|\s			"_ "		1
+\w{2}			"ab"		2
+\w{2,}			"abc"		3
+[a-z]{2,}		"abcd"		4
+\w{2,3}			"abc"		3
+\w{,2}			"abc"		2
+\w{,3}			"abc"		3
+\w{,4}			"abc"		3
+{2}			"{2}"		3
+x{}			"x{}"		3
+x{1,2,}			"x{1,2,}"	7
+x{,2,}			"x{,2,}"	6
+x{,}			"x{,}"		4
+x{-2}			"x{-2}"		5
+([a-z][0-9])+		"a0b1"		4
+([a-z][0-9]){3}		"a0b1c2"	6
+#((ab)|b)+		"abbb"	        4

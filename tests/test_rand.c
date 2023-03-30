@@ -10,6 +10,7 @@
 #include <stdio.h>
 #include "re.h"
 
+void re_print(re_t);
 
 int main(int argc, char** argv)
 {
@@ -19,6 +20,9 @@ int main(int argc, char** argv)
     int m = re_match(argv[1], argv[2], &length);
     if (m != -1)
       return 0;
+    printf("\n");
+    re_print(re_compile(argv[1]));
+    fprintf(stderr, "pattern '%s' didn't match '%s' as expected. \n", argv[1], argv[2]);
   }
   else
   {

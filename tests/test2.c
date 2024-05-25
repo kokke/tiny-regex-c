@@ -2066,7 +2066,7 @@ int main()
   size_t bufsize = sizeof(buf) - 1;
   int i;
   int dummy = 0;
-  size_t bufsizes[ntests];
+  unsigned long bufsizes[ntests];
   char old;
 
   for (i = ntests-1; i >= 0; --i)

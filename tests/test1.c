@@ -11,7 +11,6 @@
 #define OK    ((char*) 1)
 #define NOK   ((char*) 0)
 
-
 char* test_vector[][4] =
 {
   { OK,  "\\d",                       "5",                (char*) 1      },
@@ -107,17 +106,21 @@ int main()
     int should_fail;
     int length;
     int correctlen;
-    size_t nvector_tests = sizeof(test_vector) / sizeof(*test_vector);
-    size_t ntests = nvector_tests + 1;
-    size_t nfailed = 0;
-    size_t i;
+    unsigned long nvector_tests = sizeof(test_vector) / sizeof(*test_vector);
+    unsigned long ntests = nvector_tests + 1;
+    unsigned long nfailed = 0;
+    unsigned long i;
 
     for (i = 0; i < nvector_tests; ++i)
     {
         pattern = test_vector[i][1];
         text = test_vector[i][2];
         should_fail = (test_vector[i][0] == NOK);
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wpointer-to-int-cast"
         correctlen = (int)(test_vector[i][3]);
+#pragma GCC diagnostic pop
 
         int m = re_match(pattern, text, &length);
 

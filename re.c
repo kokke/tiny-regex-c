@@ -360,6 +360,10 @@ static int matchmetachar(char c, const char* str)
 
 static int matchcharclass(char c, const char* str)
 {
+  if (str[0] == '-' && c == '-') {
+      return 1;
+  }
+
   do
   {
     if (matchrange(c, str))

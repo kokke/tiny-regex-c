@@ -56,14 +56,11 @@ while repeats >= 0:
     try:
         repeats -= 1
         example = rstr.xeger(pattern)
-        # print("%s %s %s" % (prog, pattern, example))
-        ret = call([prog, '"%s"' % pattern, '"%s"' % example])
+        # print(f'{prog} "{pattern}" "{example}"')
+        ret = call([prog, f"'{pattern}'", f"'{example}'"], shell=False)
         if ret != 0:
             escaped = repr(example)  # escapes special chars for better printing
-            print(
-                "    FAIL : doesn't match %s as expected [%s]."
-                % (escaped, ", ".join([("0x%02x" % ord(e)) for e in example]))
-            )
+            print(f"    FAIL: {pattern} doesn't match {example}")
             nfails += 1
 
     except:

@@ -70,7 +70,7 @@ while repeats >= 0:
         repeats -= 1
         example = gen_no_match(pattern)
         # print("%s %s %s" % (prog, pattern, example))
-        ret = call([prog, '"%s"' % pattern, '"%s"' % example])
+        ret = call([prog, f"'{pattern}'", f"'{example}'"], shell=False)
         if ret != 0:
             escaped = repr(example)  # escapes special chars for better printing
             print(

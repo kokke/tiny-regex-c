@@ -360,31 +360,30 @@ static int matchcharclass(char c, unsigned char len, const char* str)
       return 1;
   }
 
-  int i = 0;
-  do
+  for(unsigned char i = 0; i < len; i++)
   {
-    if (matchrange(c, str))
+    if (matchrange(c, &str[i]))
     {
       return 1;
     }
-    else if (str[0] == '\\')
+    else if (str[i] == '\\')
     {
       /* Escape-char: increment str-ptr and match on next char */
-      str += 1;
-      if (matchmetachar(c, str))
+      i++;
+      if (matchmetachar(c, &str[i]))
       {
         return 1;
       }
-      else if ((c == str[0]) && !ismetachar(c))
+      else if ((c == str[i]) && !ismetachar(c))
       {
         return 1;
       }
     }
-    else if (c == str[0])
+    else if (c == str[i])
     {
       if (c == '-')
       {
-        if ((str[-1] == '\0') || (i == len - 1))
+        if ((str[i-1] == '\0') || (i == len - 1))
             return 1;
         // else continue
       }
@@ -394,7 +393,6 @@ static int matchcharclass(char c, unsigned char len, const char* str)
       }
     }
   }
-  while (++i < len && *str++ != '\0');
 
   return 0;
 }

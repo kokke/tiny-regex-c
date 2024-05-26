@@ -80,12 +80,12 @@ while repeats >= 0:
             nfails += 1
 
     except:
-        # import traceback
-        # print("EXCEPTION!")
-        # raw_input(traceback.format_exc())
+        import traceback
+        print("EXCEPTION!")
+        input(traceback.format_exc())
         ntests -= 1
         repeats += 1
-        # nfails += 1
+        nfails += 1
 
 sys.stdout.write("%4d/%d tests succeeded \n" % (ntests - nfails, ntests))
 # print("")

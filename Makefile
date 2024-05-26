@@ -30,6 +30,49 @@ test: all
 	@./tests/test1
 	@echo Testing handling of invalid regex patterns
 	@./tests/test_compile
+	@echo Compiling patterns in both Python and C and verifying the results are the same:
+	@echo
+	@$(PYTHON) ./scripts/regex_test_compile.py \\d+\\w?\\D\\d
+	@$(PYTHON) ./scripts/regex_test_compile.py \\s+[a-zA-Z0-9?]*
+	@$(PYTHON) ./scripts/regex_test_compile.py \\w*\\d?\\w\\?
+	@$(PYTHON) ./scripts/regex_test_compile.py [^\\d]+\\\\?\\s
+	@$(PYTHON) ./scripts/regex_test_compile.py [^\\w][^-1-4]
+	@$(PYTHON) ./scripts/regex_test_compile.py [^\\w]
+	@$(PYTHON) ./scripts/regex_test_compile.py [^1-4]
+	@$(PYTHON) ./scripts/regex_test_compile.py [^-1-4]
+	@$(PYTHON) ./scripts/regex_test_compile.py [^\\d]+\\s?[\\w]*
+	@$(PYTHON) ./scripts/regex_test_compile.py a+b*[ac]*.+.*.[\\.].
+	@$(PYTHON) ./scripts/regex_test_compile.py a?b[ac*]*.?[\\]+[?]?
+	@$(PYTHON) ./scripts/regex_test_compile.py [1-5-]+[-1-2]-[-]
+	@$(PYTHON) ./scripts/regex_test_compile.py [-1-3]-[-]+
+	@$(PYTHON) ./scripts/regex_test_compile.py [1-5]+[-1-2]-[\\-]
+	@$(PYTHON) ./scripts/regex_test_compile.py [-1-2]*
+	@$(PYTHON) ./scripts/regex_test_compile.py \\s?[a-fKL098]+-?
+	@$(PYTHON) ./scripts/regex_test_compile.py [\\-]*
+	@$(PYTHON) ./scripts/regex_test_compile.py [\\\\]+
+	@$(PYTHON) ./scripts/regex_test_compile.py [0-9a-fA-F]+
+	@$(PYTHON) ./scripts/regex_test_compile.py [1379][2468][abcdef]
+	@$(PYTHON) ./scripts/regex_test_compile.py [012345-9]?[0123-789]
+	@$(PYTHON) ./scripts/regex_test_compile.py [012345-9]
+	@$(PYTHON) ./scripts/regex_test_compile.py [0-56789]
+	@$(PYTHON) ./scripts/regex_test_compile.py [abc-zABC-Z]
+	@$(PYTHON) ./scripts/regex_test_compile.py [a\d]?1234
+	@$(PYTHON) ./scripts/regex_test_compile.py .*123faerdig
+	@$(PYTHON) ./scripts/regex_test_compile.py .?\\w+jsj$
+	@$(PYTHON) ./scripts/regex_test_compile.py [?to][+to][?ta][*ta]
+	@$(PYTHON) ./scripts/regex_test_compile.py \\d+
+	@$(PYTHON) ./scripts/regex_test_compile.py [a-z]+
+	@$(PYTHON) ./scripts/regex_test_compile.py \\s+[a-zA-Z0-9?]*
+	@$(PYTHON) ./scripts/regex_test_compile.py \\w
+	@$(PYTHON) ./scripts/regex_test_compile.py \\d
+	@$(PYTHON) ./scripts/regex_test_compile.py [\\d]
+	@$(PYTHON) ./scripts/regex_test_compile.py [^\\d]
+	@$(PYTHON) ./scripts/regex_test_compile.py [^-1-4]
+	@$(PYTHON) ./scripts/regex_test_compile.py \\x01[^\\xff][^
+	@$(PYTHON) ./scripts/regex_test_compile.py \\x01[^\\xff][\
+	@echo
+	@echo
+	@echo
 	@echo Testing patterns against $(NRAND_TESTS) random strings matching the Python implementation and comparing:
 	@echo
 	@$(PYTHON) ./scripts/regex_test.py \\d+\\w?\\D\\d             $(NRAND_TESTS)

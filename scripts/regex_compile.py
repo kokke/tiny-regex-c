@@ -125,9 +125,6 @@ class MiniRegexCompiler:
                 if segment.data_len >= char_limit:
                     return None
 
-                # Character class expects 'UNUSED' at the end
-                segment.data.append(RegexType.UNUSED.value)
-                segment.data_len += 1
                 segments.append(segment)
             elif c == '\0':
                 return None

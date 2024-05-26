@@ -57,7 +57,7 @@ static re_t getnext(regex_t* pattern)
 
 /* Private function declarations: */
 static int matchpattern(regex_t* pattern, const char* text, int* matchlength);
-static int matchcharclass(char c, const char* str);
+static int matchcharclass(char c, unsigned char len, const char* str);
 static int matchstar(regex_t *p, regex_t* pattern, const char* text, int* matchlength);
 static int matchplus(regex_t *p, regex_t* pattern, const char* text, int* matchlength);
 static int matchone(regex_t* p, char c);
@@ -225,8 +225,6 @@ re_t re_compile(const char* pattern)
             //fputs("exceeded internal buffer!\n", stderr);
             return 0;
         }
-        /* Null-terminate string end */
-        re_compiled->data[re_compiled->data_len++] = 0;
       } break;
 
       case '\0': // EOL
@@ -356,12 +354,13 @@ static int matchmetachar(char c, const char* str)
   }
 }
 
-static int matchcharclass(char c, const char* str)
+static int matchcharclass(char c, unsigned char len, const char* str)
 {
   if (str[0] == '-' && c == '-') {
       return 1;
   }
 
+  int i = 0;
   do
   {
     if (matchrange(c, str))
@@ -385,7 +384,7 @@ static int matchcharclass(char c, const char* str)
     {
       if (c == '-')
       {
-        if ((str[-1] == '\0') || (str[1] == '\0'))
+        if ((str[-1] == '\0') || (i == len - 1))
             return 1;
         // else continue
       }
@@ -395,7 +394,7 @@ static int matchcharclass(char c, const char* str)
       }
     }
   }
-  while (*str++ != '\0');
+  while (++i < len && *str++ != '\0');
 
   return 0;
 }
@@ -405,8 +404,8 @@ static int matchone(regex_t* p, char c)
   switch (p->type)
   {
     case DOT:            return matchdot(c);
-    case CHAR_CLASS:     return  matchcharclass(c, (const char*)p->data);
-    case INV_CHAR_CLASS: return !matchcharclass(c, (const char*)p->data);
+    case CHAR_CLASS:     return  matchcharclass(c, p->data_len, (const char*)p->data);
+    case INV_CHAR_CLASS: return !matchcharclass(c, p->data_len, (const char*)p->data);
     case DIGIT:          return  matchdigit(c);
     case NOT_DIGIT:      return !matchdigit(c);
     case ALPHA:          return  matchalphanum(c);

@@ -101,6 +101,10 @@ int re_matchp(re_t pattern, const char* text, int* matchlength)
 
           return idx;
         }
+
+        //  Reset match length for the next starting point
+	*matchlength = 0;
+
       }
       while (*text++ != '\0');
     }

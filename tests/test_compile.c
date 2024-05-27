@@ -5,6 +5,8 @@ This file tests two bug patterns reported by @DavidKorczynski in https://github.
 */
 
 #include <assert.h>
+#include <stdio.h>
+#include <string.h>
 #include <stdlib.h> /* for NULL */
 #include "re.h"
 
@@ -49,13 +51,12 @@ unsigned char *hex_to_bytes(const char *hex, size_t *length) {
 
 int main(int argc, char** argv)
 {
-  int length;
   if (argc == 3)
   {
     size_t pattern_len;
-    re_t *compiled_pattern = NULL;
+    re_t compiled_pattern = NULL;
     if(argv[2] != NULL){
-      compiled_pattern = hex_to_bytes(argv[2], &pattern_len);
+      compiled_pattern = (re_t)hex_to_bytes(argv[2], &pattern_len);
     }
     //hexdump(compiled_pattern, pattern_len);
     //hexdump(re_compile(argv[1]), pattern_len);

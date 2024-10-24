@@ -17,6 +17,14 @@ import exrex
 from subprocess import call
 
 
+def get_one(pattern):
+  """Ensure that Python's re-module agrees the example matches the pattern"""
+  while True:
+    p = exrex.getone(pattern)
+    m = re.match(pattern, p)
+    if m:
+      return p
+
 prog = "./tests/test_rand"
 
 if len(sys.argv) < 2:
@@ -41,14 +49,6 @@ try:
 except:
   pass
 
-r = 50
-while r < 0:
-  try:
-    g = exrex.generate(pattern)
-    break
-  except:
-    pass
-
 
 sys.stdout.write("%-35s" % ("  pattern '%s': " % pattern))
 
@@ -56,7 +56,7 @@ sys.stdout.write("%-35s" % ("  pattern '%s': " % pattern))
 while repeats >= 0:
   try:
     repeats -= 1
-    example = exrex.getone(pattern)
+    example = get_one(pattern)
     #print("%s %s %s" % (prog, pattern, example))
     ret = call([prog, "\"%s\"" % pattern, "\"%s\"" % example])
     if ret != 0:
@@ -65,9 +65,8 @@ while repeats >= 0:
       nfails += 1
 
   except:
-    #import traceback
-    #print("EXCEPTION!")
-    #raw_input(traceback.format_exc())
+    import traceback
+    print("EXCEPTION!", traceback.format_exc())
     ntests -= 1
     repeats += 1
     #nfails += 1

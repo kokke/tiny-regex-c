@@ -32,6 +32,7 @@
 #include "re.h"
 #include <stdio.h>
 #include <ctype.h>
+#include <string.h>
 
 /* Definitions: */
 
@@ -285,6 +286,33 @@ void re_print(regex_t* pattern)
   }
 }
 
+/* Return the number of occurence matched, 0 if there is not match 
+ * Accept a function to call at each success match with index and length of match
+ */
+unsigned int match_times(re_t pattern, const char* text, void (*success_function)(int,int*))
+{
+  int keep = 0, success = 0, match_length = 0;
+  unsigned int occurence = 0;
+
+  success = re_matchp(pattern,text,&match_length);
+  while( success != -1 )
+  {
+    occurence++;
+    (*success_function)(keep+success,&match_length); // (int index, int* match_length)
+    keep += success+match_length;
+    success = re_matchp(pattern,text+keep,&match_length);
+  }
+  return occurence;
+}
+
+/* Return 1 if pattern match perfectly with text, 0 otherwise */
+int match_full(re_t pattern, const char* text)
+{
+  int match_length;
+  // if index of start match is 0 and size of text is egal to the matched length
+  if (re_matchp(pattern,text,&match_length) == 0 && strlen(text) == (size_t)match_length) return 1; // true
+  return 0; // false
+}
 
 
 /* Private functions: */

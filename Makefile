@@ -13,6 +13,7 @@ all:
 	@$(CC) $(CFLAGS) re.c tests/test_rand.c     -o tests/test_rand
 	@$(CC) $(CFLAGS) re.c tests/test_rand_neg.c -o tests/test_rand_neg
 	@$(CC) $(CFLAGS) re.c tests/test_compile.c  -o tests/test_compile
+	@$(CC) $(CFLAGS) re.c tests/test3.c         -o tests/test3
 
 clean:
 	@rm -f tests/test1 tests/test2 tests/test_rand tests/test_compile

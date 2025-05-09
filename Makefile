@@ -1,5 +1,5 @@
 # Compiler to use - can be replaced by clang for instance
-CC := gcc
+CC ?= gcc
 
 # Number of random text expressions to generate, for random testing
 NRAND_TESTS := 1000

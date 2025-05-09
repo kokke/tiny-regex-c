@@ -478,7 +478,7 @@ static int matchpattern(regex_t* pattern, const char* text, int *matchlength)
   else if ((text[0] != '\0') && matchone(pattern[0], text[0]))
   {
     (*matchlength)++;
-    return matchpattern(&pattern[1], text+1);
+    return matchpattern(&pattern[1], text+1, matchlength);
   }
   else
   {

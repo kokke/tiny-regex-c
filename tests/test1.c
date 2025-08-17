@@ -97,6 +97,7 @@ char* test_vector[][4] =
   { NOK, "X?Y",                        "Z",               (char*) 0      },
   { OK, "[a-z]+\nbreak",              "blahblah\nbreak",  (char*) 14     },
   { OK, "[a-z\\s]+\nbreak",           "bla bla \nbreak",  (char*) 14     },
+  { OK, "\\s*",                       "",                 (char*) 0      },
 };
 
 

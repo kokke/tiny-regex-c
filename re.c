@@ -94,9 +94,6 @@ int re_matchp(re_t pattern, const char* text, int* matchlength)
 
         if (matchpattern(pattern, text, matchlength))
         {
-          if (text[0] == '\0')
-            return -1;
-
           return idx;
         }
       }

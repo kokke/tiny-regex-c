@@ -2062,11 +2062,13 @@ char buf[] = {
 
 int main()
 {
-  const int ntests = 10;
+  /* MSVC do not support Variable Length Array, so use preprocessor define for size */
+  #define NUM_TESTS 10
+  const int ntests = NUM_TESTS;
   size_t bufsize = sizeof(buf) - 1;
   int i;
   int dummy = 0;
-  size_t bufsizes[ntests];
+  size_t bufsizes[NUM_TESTS];
   char old;
 
   for (i = ntests-1; i >= 0; --i)

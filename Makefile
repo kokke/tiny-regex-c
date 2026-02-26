@@ -15,7 +15,7 @@ all:
 	@$(CC) $(CFLAGS) re.c tests/test_compile.c  -o tests/test_compile
 
 clean:
-	@rm -f tests/test1 tests/test2 tests/test_rand tests/test_compile
+	@rm -f tests/test1 tests/test2 tests/test_rand tests/test_rand_neg tests/test_compile
 	@#@$(foreach test_bin,$(TEST_BINS), rm -f $(test_bin) ; )
 	@rm -f a.out
 	@rm -f *.o

@@ -160,14 +160,17 @@ re_t re_compile(const char* pattern)
             } break;
           }
         }
-        /* '\\' as last char in pattern -> invalid regular expression. */
-/*
         else
         {
-          re_compiled[j].type = CHAR;
-          re_compiled[j].ch = pattern[i];
+          /* '\\' as last char in pattern -> invalid regular expression.
+             Bail out here instead of leaving re_compiled[j] untouched:
+             re_compiled and ccl_buf are function-static, so a stale slot
+             left over from an earlier, differently-shaped compile call
+             (e.g. a half-finished CHAR_CLASS whose ccl pointer was never
+             assigned) would otherwise leak into this compile and crash
+             matching later on. */
+          return 0;
         }
-*/
       } break;
 
       /* Character class: */

@@ -114,10 +114,16 @@ re_t re_compile(const char* pattern)
   static regex_t re_compiled[MAX_REGEXP_OBJECTS];
   static unsigned char ccl_buf[MAX_CHAR_CLASS_LEN];
   int ccl_bufidx = 1;
+  int k;
 
   char c;     /* current char in pattern   */
   int i = 0;  /* index into pattern        */
   int j = 0;  /* index into re_compiled    */
+
+  for (k = 0; k < MAX_REGEXP_OBJECTS; ++k)
+  {
+    re_compiled[k].type = UNUSED;
+  }
 
   while (pattern[i] != '\0' && (j+1 < MAX_REGEXP_OBJECTS))
   {
@@ -137,37 +143,30 @@ re_t re_compile(const char* pattern)
       /* Escaped character-classes (\s \w ...): */
       case '\\':
       {
-        if (pattern[i+1] != '\0')
+        if (pattern[i+1] == '\0')
         {
-          /* Skip the escape-char '\\' */
-          i += 1;
-          /* ... and check the next */
-          switch (pattern[i])
-          {
-            /* Meta-character: */
-            case 'd': {    re_compiled[j].type = DIGIT;            } break;
-            case 'D': {    re_compiled[j].type = NOT_DIGIT;        } break;
-            case 'w': {    re_compiled[j].type = ALPHA;            } break;
-            case 'W': {    re_compiled[j].type = NOT_ALPHA;        } break;
-            case 's': {    re_compiled[j].type = WHITESPACE;       } break;
-            case 'S': {    re_compiled[j].type = NOT_WHITESPACE;   } break;
+          return NULL;
+        }
 
-            /* Escaped character, e.g. '.' or '$' */
-            default:
-            {
-              re_compiled[j].type = CHAR;
-              re_compiled[j].u.ch = pattern[i];
-            } break;
-          }
-        }
-        /* '\\' as last char in pattern -> invalid regular expression. */
-/*
-        else
+        /* Skip the escape-char '\\' and inspect the escaped character. */
+        i += 1;
+        switch (pattern[i])
         {
-          re_compiled[j].type = CHAR;
-          re_compiled[j].ch = pattern[i];
+          /* Meta-character: */
+          case 'd': {    re_compiled[j].type = DIGIT;            } break;
+          case 'D': {    re_compiled[j].type = NOT_DIGIT;        } break;
+          case 'w': {    re_compiled[j].type = ALPHA;            } break;
+          case 'W': {    re_compiled[j].type = NOT_ALPHA;        } break;
+          case 's': {    re_compiled[j].type = WHITESPACE;       } break;
+          case 'S': {    re_compiled[j].type = NOT_WHITESPACE;   } break;
+
+          /* Escaped character, e.g. '.' or '$' */
+          default:
+          {
+            re_compiled[j].type = CHAR;
+            re_compiled[j].u.ch = pattern[i];
+          } break;
         }
-*/
       } break;
 
       /* Character class: */
@@ -306,13 +305,17 @@ static int matchalphanum(char c)
 }
 static int matchrange(char c, const char* str)
 {
-  return (    (c != '-')
-           && (str[0] != '\0')
-           && (str[0] != '-')
-           && (str[1] == '-')
-           && (str[2] != '\0')
-           && (    (c >= str[0])
-                && (c <= str[2])));
+  if (str == NULL || c == '-' || str[0] == '\0' || str[0] == '-')
+  {
+    return 0;
+  }
+
+  if (str[1] != '-' || str[2] == '\0')
+  {
+    return 0;
+  }
+
+  return (c >= str[0]) && (c <= str[2]);
 }
 static int matchdot(char c)
 {
@@ -344,6 +347,11 @@ static int matchmetachar(char c, const char* str)
 
 static int matchcharclass(char c, const char* str)
 {
+  if (str == NULL)
+  {
+    return 0;
+  }
+
   do
   {
     if (matchrange(c, str))

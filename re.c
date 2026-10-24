@@ -31,6 +31,7 @@
 
 #include "re.h"
 #include <stdio.h>
+#include <string.h>
 #include <ctype.h>
 
 /* Definitions: */
@@ -119,6 +120,11 @@ re_t re_compile(const char* pattern)
   int i = 0;  /* index into pattern        */
   int j = 0;  /* index into re_compiled    */
 
+  /* The token array is static and shared between calls. A pattern that
+     fails half way through must not leave tokens behind for the next
+     call, so start from the end-of-pattern sentinel every time. */
+  memset(re_compiled, 0, sizeof(re_compiled));
+
   while (pattern[i] != '\0' && (j+1 < MAX_REGEXP_OBJECTS))
   {
     c = pattern[i];
@@ -175,20 +181,17 @@ re_t re_compile(const char* pattern)
       {
         /* Remember where the char-buffer starts. */
         int buf_begin = ccl_bufidx;
+        int negated = 0;
 
         /* Look-ahead to determine if negated */
         if (pattern[i+1] == '^')
         {
-          re_compiled[j].type = INV_CHAR_CLASS;
+          negated = 1;
           i += 1; /* Increment i to avoid including '^' in the char-buffer */
           if (pattern[i+1] == 0) /* incomplete pattern, missing non-zero char after '^' */
           {
             return 0;
           }
-        }
-        else
-        {
-          re_compiled[j].type = CHAR_CLASS;
         }
 
         /* Copy characters inside [..] to buffer */
@@ -223,7 +226,10 @@ re_t re_compile(const char* pattern)
         }
         /* Null-terminate string end */
         ccl_buf[ccl_bufidx++] = 0;
+        /* Publish the token only once the class buffer is complete: the
+           failure paths above return without filling it in. */
         re_compiled[j].u.ccl = &ccl_buf[buf_begin];
+        re_compiled[j].type = negated ? INV_CHAR_CLASS : CHAR_CLASS;
       } break;
 
       /* Other characters: */
